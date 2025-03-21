@@ -4,47 +4,7 @@ import io
 
 app = Flask(__name__)
 
-class EtiquetaPDF(FPDF):
-    def __init__(self, largura_cm, altura_cm):
-        largura_mm = largura_cm * 10
-        altura_mm = altura_cm * 10
-        super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
-
-    def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        self.set_margins(5, 5, 5)
-        self.set_auto_page_break(auto=False, margin=5)
-
-        self.set_font("Arial", size=8, style='B')
-        self.cell(20, 5, "Remetente:", ln=False)
-        self.set_font("Arial", size=8)
-        self.cell(0, 5, remetente.strip(), ln=True)
-
-        self.set_font("Arial", size=8, style='B')
-        self.cell(20, 5, "Destinatário:", ln=False)
-        self.set_font("Arial", size=8)
-        self.cell(0, 5, destinatario.strip(), ln=True)
-
-        self.set_font("Arial", size=12, style='B')
-        self.cell(15, 5, "CTE:", ln=False)
-        self.set_font("Arial", size=12)
-        self.cell(50, 5, cte.strip(), ln=False)
-
-        self.set_font("Arial", size=12, style='B')
-        self.cell(20, 5, "Volumes:", ln=False)
-        self.set_font("Arial", size=12)
-        self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
-
-        self.set_font("Arial", size=8, style='B')
-        self.cell(0, 5, "Notas Fiscais:", ln=True)
-        self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, nfs.strip())
-
-        self.set_font("Arial", size=8, style='B')
-        self.cell(0, 5, "Observação:", ln=True)
-        self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, obs.strip())
-
-@app.route("/gerar_etiqueta", methods=["POST"])
+@app.route("/gerar_etiqueta", methods=["POST"])  # CONFIRME QUE ESSA LINHA ESTÁ PRESENTE
 def gerar_etiqueta():
     data = request.json
     remetente = data.get("remetente", "Remetente Padrão")
