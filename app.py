@@ -4,7 +4,7 @@ import io
 
 app = Flask(__name__)
 
-@app.route("/gerar_etiqueta", methods=["POST"])
+@app.route("/gerar_etiqueta", methods=["POST"])  # CERTIFIQUE-SE DE QUE ESSA LINHA ESTÁ PRESENTE
 def gerar_etiqueta():
     data = request.json
     remetente = data.get("remetente", "Remetente Padrão")
