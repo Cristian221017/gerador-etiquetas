@@ -67,8 +67,9 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
+        # Corrigindo a geração do PDF
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, 'F')  # Corrige o erro do BytesIO
+        pdf.output(pdf_output, 'S')  # Gera o PDF como string
         pdf_output.seek(0)  # Move para o início do arquivo
 
         return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
