@@ -1,7 +1,6 @@
 from flask import Flask, request, send_file, render_template, jsonify
 from fpdf import FPDF
 import io
-import os
 
 app = Flask(__name__, template_folder="templates")
 
@@ -10,6 +9,8 @@ class EtiquetaPDF(FPDF):
         largura_mm = largura_cm * 10
         altura_mm = altura_cm * 10
         super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
+        self.largura_mm = largura_mm
+        self.altura_mm = altura_mm
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_margins(5, 5, 5)
@@ -75,7 +76,7 @@ def gerar_etiqueta():
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, "F")  # Salvar o PDF no buffer
+        pdf.output(pdf_output, dest="S").encode("latin1")
         pdf_output.seek(0)
 
         return send_file(
@@ -98,7 +99,7 @@ def test_pdf():
     pdf.cell(200, 10, txt="Teste de Geração de PDF", ln=1, align="C")
 
     pdf_output = io.BytesIO()
-    pdf.output(pdf_output, "F")  # Salvar no buffer
+    pdf.output(pdf_output, dest="S").encode("latin1")
     pdf_output.seek(0)
 
     return send_file(
