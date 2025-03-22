@@ -1,9 +1,15 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, jsonify
 from fpdf import FPDF
 import io
 
 app = Flask(__name__)
 
+# Rota principal para testar se a API está rodando
+@app.route("/")
+def home():
+    return jsonify({"mensagem": "API de Geração de Etiquetas está rodando!"})
+
+# Classe para criar etiquetas em PDF
 class EtiquetaPDF(FPDF):
     def __init__(self, largura_cm, altura_cm):
         largura_mm = largura_cm * 10
@@ -14,16 +20,19 @@ class EtiquetaPDF(FPDF):
         self.set_margins(5, 5, 5)
         self.set_auto_page_break(auto=False, margin=5)
 
+        # Remetente
         self.set_font("Arial", size=8, style='B')
         self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
         self.cell(0, 5, remetente.strip(), ln=True)
 
+        # Destinatário
         self.set_font("Arial", size=8, style='B')
         self.cell(20, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
         self.cell(0, 5, destinatario.strip(), ln=True)
 
+        # CTE e Volumes
         self.set_font("Arial", size=12, style='B')
         self.cell(15, 5, "CTE:", ln=False)
         self.set_font("Arial", size=12)
@@ -34,16 +43,19 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", size=12)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
+        # Notas Fiscais
         self.set_font("Arial", size=8, style='B')
         self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
         self.multi_cell(0, 5, nfs.strip())
 
+        # Observação
         self.set_font("Arial", size=8, style='B')
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=8)
         self.multi_cell(0, 5, obs.strip())
 
+# Endpoint para gerar etiquetas em PDF
 @app.route("/gerar_etiqueta", methods=["POST"])
 def gerar_etiqueta():
     try:
@@ -63,16 +75,15 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        # Criar um objeto de bytes e salvar o PDF nele
         pdf_output = io.BytesIO()
-        pdf_data = pdf.output(dest="S").encode("latin1")  # Retorna o PDF como bytes
-        pdf_output.write(pdf_data)
+        pdf.output(pdf_output, "F")  # Salvar no buffer
         pdf_output.seek(0)
 
-        return send_file(pdf_output, download_name="etiqueta.pdf", as_attachment=True, mimetype="application/pdf")
+        return send_file(pdf_output, download_name="etiqueta.pdf", as_attachment=True)
 
     except Exception as e:
-        return {"erro": str(e)}, 500  # Retorna erro detalhado
+        return jsonify({"erro": str(e)}), 500
 
+# Executando a API no servidor
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
