@@ -44,10 +44,6 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", size=8)
         self.multi_cell(0, 5, obs.strip())
 
-@app.route("/", methods=["GET"])
-def home():
-    return "API de geração de etiquetas está rodando!"
-
 @app.route("/gerar_etiqueta", methods=["POST"])
 def gerar_etiqueta():
     try:
@@ -67,14 +63,15 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
+        # Criar um objeto de bytes e salvar o PDF nele
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output)
+        pdf.output(pdf_output, 'F')  # Gera o PDF corretamente
         pdf_output.seek(0)
 
-        return send_file(pdf_output, download_name="etiqueta.pdf", as_attachment=True)
-    
+        return send_file(pdf_output, download_name="etiqueta.pdf", as_attachment=True, mimetype='application/pdf')
+
     except Exception as e:
-        return {"erro": str(e)}, 500  # Mostra o erro na resposta
+        return {"erro": str(e)}, 500  # Retorna erro detalhado
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
