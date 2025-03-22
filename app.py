@@ -69,7 +69,7 @@ def gerar_etiqueta():
 
         # Criar um buffer de memória para armazenar o PDF
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, 'F')  # Salva no buffer corretamente
+        pdf.output(pdf_output, dest='S').encode('latin1')  # Corrige o problema de encoding
         pdf_output.seek(0)  # Move o ponteiro para o início do arquivo
 
         return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
