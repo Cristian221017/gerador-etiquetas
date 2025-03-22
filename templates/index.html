@@ -4,33 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Etiquetas</title>
+    <script>
+        function enviarFormulario(event) {
+            event.preventDefault(); // Evita o reload da página
+
+            const dados = {
+                remetente: document.getElementById("remetente").value,
+                destinatario: document.getElementById("destinatario").value,
+                cte: document.getElementById("cte").value,
+                nfs: document.getElementById("nfs").value,
+                obs: document.getElementById("obs").value,
+                total_volumes: document.getElementById("total_volumes").value,
+                largura: document.getElementById("largura").value,
+                altura: document.getElementById("altura").value
+            };
+
+            fetch("/gerar_etiqueta", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(dados)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Erro ao gerar etiqueta");
+                }
+                return response.blob(); // Retorna o PDF
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "etiqueta.pdf";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            })
+            .catch(error => alert(error.message));
+        }
+    </script>
 </head>
 <body>
     <h1>Gerador de Etiquetas</h1>
-    <form action="/gerar_etiqueta" method="post">
+    <form onsubmit="enviarFormulario(event)">
         <label>Remetente:</label>
-        <input type="text" name="remetente" required><br>
+        <input type="text" id="remetente" required><br>
 
         <label>Destinatário:</label>
-        <input type="text" name="destinatario" required><br>
+        <input type="text" id="destinatario" required><br>
 
         <label>CTE:</label>
-        <input type="text" name="cte" required><br>
+        <input type="text" id="cte" required><br>
 
         <label>Notas Fiscais:</label>
-        <textarea name="nfs" required></textarea><br>
+        <textarea id="nfs" required></textarea><br>
 
         <label>Observações:</label>
-        <textarea name="obs"></textarea><br>
+        <textarea id="obs"></textarea><br>
 
         <label>Total de Volumes:</label>
-        <input type="number" name="total_volumes" min="1" required><br>
+        <input type="number" id="total_volumes" min="1" required><br>
 
         <label>Largura (cm):</label>
-        <input type="number" name="largura" step="0.1" required><br>
+        <input type="number" id="largura" step="0.1" required><br>
 
         <label>Altura (cm):</label>
-        <input type="number" name="altura" step="0.1" required><br>
+        <input type="number" id="altura" step="0.1" required><br>
 
         <button type="submit">Gerar Etiqueta</button>
     </form>

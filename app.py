@@ -51,7 +51,11 @@ def home():
 @app.route("/gerar_etiqueta", methods=["POST"])
 def gerar_etiqueta():
     try:
-        data = request.json
+        if request.content_type == "application/json":
+            data = request.json
+        else:
+            data = request.form.to_dict()  # Pega os dados do formulário HTML
+
         remetente = data.get("remetente", "Remetente Padrão")
         destinatario = data.get("destinatario", "Destinatário Padrão")
         cte = data.get("cte", "000000")
@@ -68,7 +72,7 @@ def gerar_etiqueta():
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, dest='F')  # Salva o PDF corretamente
+        pdf.output(pdf_output, dest='F')
         pdf_output.seek(0)
 
         return send_file(
@@ -82,6 +86,7 @@ def gerar_etiqueta():
         return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
     except Exception as e:
         return jsonify({"erro": f"Erro interno do servidor: {str(e)}"}), 500
+
 
 @app.route("/test_pdf", methods=["GET"])
 def test_pdf():
