@@ -44,9 +44,14 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", size=8)
         self.multi_cell(0, 5, obs.strip())
 
+from flask import Flask, request, send_file, jsonify, render_template
+
+app = Flask(__name__, template_folder="templates")
+
 @app.route("/")
 def home():
-    return render_template("index.html")  # Renderiza a interface no navegador
+    return render_template("index.html")
+
 
 @app.route("/gerar_etiqueta", methods=["POST"])
 def gerar_etiqueta():
