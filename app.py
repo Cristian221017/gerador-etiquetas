@@ -76,7 +76,7 @@ def gerar_etiqueta():
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, dest="S").encode("latin1")
+        pdf.output(pdf_output, dest="S")
         pdf_output.seek(0)
 
         return send_file(
@@ -99,7 +99,7 @@ def test_pdf():
     pdf.cell(200, 10, txt="Teste de Geração de PDF", ln=1, align="C")
 
     pdf_output = io.BytesIO()
-    pdf.output(pdf_output, dest="S").encode("latin1")
+    pdf.output(pdf_output, dest="S")
     pdf_output.seek(0)
 
     return send_file(
