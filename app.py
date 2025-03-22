@@ -8,7 +8,7 @@ app = Flask(__name__)
 def home():
     return "API de geração de etiquetas está rodando!"
 
-@app.route("/gerar_etiqueta", methods=["POST"])
+@app.route("/gerar_etiqueta", methods=["POST"])  # 🚨 GARANTA QUE ESSA LINHA ESTÁ PRESENTE
 def gerar_etiqueta():
     data = request.json
     remetente = data.get("remetente", "Remetente Padrão")
