@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Etiquetas</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+        form { max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
+        label, input, textarea { width: 100%; display: block; margin-bottom: 10px; }
+        button { padding: 10px 15px; background: #28a745; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Gerador de Etiquetas</h1>
+    <form action="/gerar_etiqueta" method="POST" target="_blank">
+        <label>Remetente:</label>
+        <input type="text" name="remetente" required>
+
+        <label>Destinatário:</label>
+        <input type="text" name="destinatario" required>
+
+        <label>CTE:</label>
+        <input type="text" name="cte" required>
+
+        <label>Notas Fiscais:</label>
+        <textarea name="nfs" required></textarea>
+
+        <label>Observação:</label>
+        <textarea name="obs"></textarea>
+
+        <label>Total de Volumes:</label>
+        <input type="number" name="total_volumes" min="1" required>
+
+        <label>Largura (cm):</label>
+        <input type="number" name="largura" step="0.1" required>
+
+        <label>Altura (cm):</label>
+        <input type="number" name="altura" step="0.1" required>
+
+        <button type="submit">Gerar Etiqueta</button>
+    </form>
+</body>
+</html>

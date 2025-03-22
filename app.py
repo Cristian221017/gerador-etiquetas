@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 from fpdf import FPDF
 import io
 
@@ -46,20 +46,19 @@ class EtiquetaPDF(FPDF):
 
 @app.route("/")
 def home():
-    return jsonify({"mensagem": "API de Geração de Etiquetas está rodando!"})
+    return render_template("index.html")  # Renderiza a interface no navegador
 
 @app.route("/gerar_etiqueta", methods=["POST"])
 def gerar_etiqueta():
     try:
-        data = request.json
-        remetente = data.get("remetente", "Remetente Padrão")
-        destinatario = data.get("destinatario", "Destinatário Padrão")
-        cte = data.get("cte", "000000")
-        nfs = data.get("nfs", "NF Padrão")
-        obs = data.get("obs", "Sem observação")
-        total_volumes = int(data.get("total_volumes", 1))
-        largura_cm = float(data.get("largura", 10))
-        altura_cm = float(data.get("altura", 5))
+        remetente = request.form.get("remetente", "Remetente Padrão")
+        destinatario = request.form.get("destinatario", "Destinatário Padrão")
+        cte = request.form.get("cte", "000000")
+        nfs = request.form.get("nfs", "NF Padrão")
+        obs = request.form.get("obs", "Sem observação")
+        total_volumes = int(request.form.get("total_volumes", 1))
+        largura_cm = float(request.form.get("largura", 10))
+        altura_cm = float(request.form.get("altura", 5))
 
         pdf = EtiquetaPDF(largura_cm, altura_cm)
 
@@ -74,32 +73,13 @@ def gerar_etiqueta():
         return send_file(
             pdf_output,
             mimetype="application/pdf",
-            as_attachment=True,
-            download_name="etiqueta.pdf"
+            as_attachment=False  # Abre no navegador
         )
 
     except ValueError as ve:
         return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
     except Exception as e:
         return jsonify({"erro": f"Erro interno do servidor: {str(e)}"}), 500
-
-@app.route("/test_pdf", methods=["GET"])
-def test_pdf():
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Test PDF", ln=1, align="C")
-
-    pdf_output = io.BytesIO()
-    pdf.output(pdf_output, dest='S')
-    pdf_output.seek(0)
-
-    return send_file(
-        pdf_output,
-        mimetype="application/pdf",
-        as_attachment=True,
-        download_name="test.pdf"
-    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
