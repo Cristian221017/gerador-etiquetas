@@ -1,8 +1,9 @@
-from flask import Flask, request, send_file, jsonify, render_template
+from flask import Flask, request, send_file, render_template, jsonify
 from fpdf import FPDF
 import io
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 
 class EtiquetaPDF(FPDF):
     def __init__(self, largura_cm, altura_cm):
@@ -13,7 +14,8 @@ class EtiquetaPDF(FPDF):
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_margins(5, 5, 5)
         self.set_auto_page_break(auto=False, margin=5)
-        
+        self.add_page()
+
         self.set_font("Arial", size=8, style='B')
         self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
@@ -50,11 +52,14 @@ def home():
 
 @app.route("/gerar_etiqueta", methods=["POST"])
 def gerar_etiqueta():
-    if request.content_type != 'application/json':
-        return jsonify({"erro": "O Content-Type deve ser application/json"}), 415
-    
     try:
-        data = request.json
+        if request.content_type != "application/json":
+            return jsonify({"erro": "O Content-Type deve ser application/json"}), 400
+
+        data = request.get_json()
+        if not data:
+            return jsonify({"erro": "Requisição inválida, JSON não encontrado"}), 400
+
         remetente = data.get("remetente", "Remetente Padrão")
         destinatario = data.get("destinatario", "Destinatário Padrão")
         cte = data.get("cte", "000000")
@@ -65,13 +70,12 @@ def gerar_etiqueta():
         altura_cm = float(data.get("altura", 5))
 
         pdf = EtiquetaPDF(largura_cm, altura_cm)
-        pdf_output = io.BytesIO()
 
         for volume in range(1, total_volumes + 1):
-            pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
-        
-        pdf.output(pdf_output, dest='F')  # Salva corretamente no buffer
+
+        pdf_output = io.BytesIO()
+        pdf.output(pdf_output, "F")  # Salvar o PDF no buffer
         pdf_output.seek(0)
 
         return send_file(
@@ -91,18 +95,18 @@ def test_pdf():
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Test PDF", ln=1, align="C")
+    pdf.cell(200, 10, txt="Teste de Geração de PDF", ln=1, align="C")
 
     pdf_output = io.BytesIO()
-    pdf.output(pdf_output, dest='F')  # Ajustado para evitar erro com BytesIO
+    pdf.output(pdf_output, "F")  # Salvar no buffer
     pdf_output.seek(0)
 
     return send_file(
         pdf_output,
         mimetype="application/pdf",
         as_attachment=True,
-        download_name="test.pdf"
+        download_name="teste.pdf"
     )
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
