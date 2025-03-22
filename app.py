@@ -1,61 +1,56 @@
 from flask import Flask, request, send_file, jsonify, render_template
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from fpdf import FPDF
 import io
 
 app = Flask(__name__)
 
-def gerar_pdf(remetente, destinatario, cte, nfs, obs, total_volumes, largura_cm, altura_cm):
-    buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=(largura_cm * 28.35, altura_cm * 28.35))  # Convertendo cm para pontos
+class EtiquetaPDF(FPDF):
+    def __init__(self, largura_cm, altura_cm):
+        largura_mm = largura_cm * 10
+        altura_mm = altura_cm * 10
+        super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
+        self.largura_mm = largura_mm
+        self.altura_mm = altura_mm
+        self.set_margins(5, 5, 5)
+        self.set_auto_page_break(auto=False, margin=5)
 
-    # Configurações de fonte e margens
-    margem = 10  # Margem interna
-    fonte_titulo = 10
-    fonte_texto = 8
-    linha_atual = altura_cm * 28 - margem  # Define a linha inicial do texto
+    def header(self):
+        pass  # Removendo cabeçalho para evitar sobreposição
 
-    for volume in range(1, total_volumes + 1):
-        pdf.setFont("Helvetica-Bold", fonte_titulo)
-        pdf.drawString(margem, linha_atual, f"Remetente:")
-        pdf.setFont("Helvetica", fonte_texto)
-        pdf.drawString(margem + 60, linha_atual, remetente)
+    def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
+        margem = 5  # Margem interna
+        linha_atual = self.h - 40  # Definir posição inicial do texto
 
-        linha_atual -= 15
-        pdf.setFont("Helvetica-Bold", fonte_titulo)
-        pdf.drawString(margem, linha_atual, "Destinatário:")
-        pdf.setFont("Helvetica", fonte_texto)
-        pdf.drawString(margem + 60, linha_atual, destinatario)
+        # Títulos e textos alinhados
+        self.set_font("Arial", style='B', size=8)
+        self.cell(20, 5, "Remetente:", ln=False)
+        self.set_font("Arial", size=8)
+        self.cell(0, 5, remetente.strip(), ln=True)
 
-        linha_atual -= 15
-        pdf.setFont("Helvetica-Bold", fonte_titulo)
-        pdf.drawString(margem, linha_atual, "CTE:")
-        pdf.setFont("Helvetica", fonte_texto)
-        pdf.drawString(margem + 40, linha_atual, cte)
+        self.set_font("Arial", style='B', size=8)
+        self.cell(20, 5, "Destinatário:", ln=False)
+        self.set_font("Arial", size=8)
+        self.cell(0, 5, destinatario.strip(), ln=True)
 
-        linha_atual -= 15
-        pdf.setFont("Helvetica-Bold", fonte_titulo)
-        pdf.drawString(margem, linha_atual, "Volumes:")
-        pdf.setFont("Helvetica", fonte_texto)
-        pdf.drawString(margem + 50, linha_atual, f"{volume}/{total_volumes}")
+        self.set_font("Arial", style='B', size=10)
+        self.cell(15, 5, "CTE:", ln=False)
+        self.set_font("Arial", size=10)
+        self.cell(50, 5, cte.strip(), ln=False)
 
-        linha_atual -= 15
-        pdf.setFont("Helvetica-Bold", fonte_titulo)
-        pdf.drawString(margem, linha_atual, "Notas Fiscais:")
-        pdf.setFont("Helvetica", fonte_texto)
-        pdf.drawString(margem + 80, linha_atual, nfs)
+        self.set_font("Arial", style='B', size=10)
+        self.cell(20, 5, "Volumes:", ln=False)
+        self.set_font("Arial", size=10)
+        self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
-        linha_atual -= 15
-        pdf.setFont("Helvetica-Bold", fonte_titulo)
-        pdf.drawString(margem, linha_atual, "Observação:")
-        pdf.setFont("Helvetica", fonte_texto)
-        pdf.drawString(margem + 80, linha_atual, obs)
+        self.set_font("Arial", style='B', size=8)
+        self.cell(0, 5, "Notas Fiscais:", ln=True)
+        self.set_font("Arial", size=8)
+        self.multi_cell(0, 5, nfs.strip())
 
-        pdf.showPage()  # Adiciona uma nova página para a próxima etiqueta
-
-    pdf.save()
-    buffer.seek(0)
-    return buffer
+        self.set_font("Arial", style='B', size=8)
+        self.cell(0, 5, "Observação:", ln=True)
+        self.set_font("Arial", size=8)
+        self.multi_cell(0, 5, obs.strip())
 
 @app.route("/")
 def home():
@@ -77,9 +72,17 @@ def gerar_etiqueta():
         largura_cm = float(data.get("largura", 10))
         altura_cm = float(data.get("altura", 5))
 
-        pdf_buffer = gerar_pdf(remetente, destinatario, cte, nfs, obs, total_volumes, largura_cm, altura_cm)
+        pdf = EtiquetaPDF(largura_cm, altura_cm)
 
-        return send_file(pdf_buffer, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
+        for volume in range(1, total_volumes + 1):
+            pdf.add_page()
+            pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
+
+        pdf_output = io.BytesIO()
+        pdf.output(pdf_output, dest='S')
+        pdf_output.seek(0)
+
+        return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
 
     except ValueError as ve:
         return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
