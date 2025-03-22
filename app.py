@@ -51,7 +51,6 @@ def home():
 @app.route("/gerar_etiqueta", methods=["POST"])
 def gerar_etiqueta():
     try:
-        # Aceita tanto JSON quanto Formulário
         if request.is_json:
             data = request.get_json()
         else:
@@ -72,12 +71,13 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
+        # Correção: Salvar o PDF no objeto BytesIO corretamente
         pdf_output = io.BytesIO()
         pdf.output(pdf_output, dest='F')
         pdf_output.seek(0)
 
         return send_file(
-            pdf_output,
+            io.BytesIO(pdf_output.getvalue()),  # Corrigido para passar os dados corretamente
             mimetype="application/pdf",
             as_attachment=True,
             download_name="etiqueta.pdf"
@@ -100,7 +100,7 @@ def test_pdf():
     pdf_output.seek(0)
 
     return send_file(
-        pdf_output,
+        io.BytesIO(pdf_output.getvalue()),  # Corrigido para passar os dados corretamente
         mimetype="application/pdf",
         as_attachment=True,
         download_name="test.pdf"
