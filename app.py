@@ -67,10 +67,9 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        # Criar um buffer de memória para armazenar o PDF
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, dest='F')  # Correção: "dest='F'" grava no BytesIO corretamente
-        pdf_output.seek(0)  # Mover o ponteiro para o início
+        pdf.output(pdf_output, dest='S')
+        pdf_output.seek(0)
 
         return send_file(
             pdf_output,
@@ -79,8 +78,28 @@ def gerar_etiqueta():
             download_name="etiqueta.pdf"
         )
 
+    except ValueError as ve:
+        return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
     except Exception as e:
-        return jsonify({"erro": str(e)}), 500
+        return jsonify({"erro": f"Erro interno do servidor: {str(e)}"}), 500
+
+@app.route("/test_pdf", methods=["GET"])
+def test_pdf():
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Test PDF", ln=1, align="C")
+
+    pdf_output = io.BytesIO()
+    pdf.output(pdf_output, dest='S')
+    pdf_output.seek(0)
+
+    return send_file(
+        pdf_output,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="test.pdf"
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
