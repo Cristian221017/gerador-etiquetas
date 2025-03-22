@@ -65,10 +65,11 @@ def gerar_etiqueta():
 
         # Criar um objeto de bytes e salvar o PDF nele
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, 'F')  # Gera o PDF corretamente
+        pdf_data = pdf.output(dest="S").encode("latin1")  # Retorna o PDF como bytes
+        pdf_output.write(pdf_data)
         pdf_output.seek(0)
 
-        return send_file(pdf_output, download_name="etiqueta.pdf", as_attachment=True, mimetype='application/pdf')
+        return send_file(pdf_output, download_name="etiqueta.pdf", as_attachment=True, mimetype="application/pdf")
 
     except Exception as e:
         return {"erro": str(e)}, 500  # Retorna erro detalhado
