@@ -4,35 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Etiquetas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Gerar Etiqueta</h1>
-    <form action="/gerar_etiqueta" method="POST" target="_blank">
-        <label>Remetente:</label>
-        <input type="text" name="remetente" value="Empresa X" required><br>
-
-        <label>Destinatário:</label>
-        <input type="text" name="destinatario" value="Cliente Y" required><br>
-
-        <label>CTE:</label>
-        <input type="text" name="cte" value="123456" required><br>
-
-        <label>Notas Fiscais:</label>
-        <input type="text" name="nfs" value="NF123456" required><br>
-
-        <label>Observações:</label>
-        <input type="text" name="obs" value="Manusear com cuidado"><br>
-
-        <label>Total de Volumes:</label>
-        <input type="number" name="total_volumes" value="5" required><br>
-
-        <label>Largura (cm):</label>
-        <input type="number" step="0.1" name="largura" value="10" required><br>
-
-        <label>Altura (cm):</label>
-        <input type="number" step="0.1" name="altura" value="5" required><br>
-
-        <button type="submit">Gerar PDF</button>
+<body class="container">
+    <h1 class="mt-5">Gerador de Etiquetas</h1>
+    
+    <form id="etiquetaForm">
+        <div class="mb-3">
+            <label for="remetente" class="form-label">Remetente:</label>
+            <input type="text" class="form-control" id="remetente" required>
+        </div>
+        <div class="mb-3">
+            <label for="destinatario" class="form-label">Destinatário:</label>
+            <input type="text" class="form-control" id="destinatario" required>
+        </div>
+        <div class="mb-3">
+            <label for="cte" class="form-label">CTE:</label>
+            <input type="text" class="form-control" id="cte" required>
+        </div>
+        <div class="mb-3">
+            <label for="nfs" class="form-label">Notas Fiscais:</label>
+            <textarea class="form-control" id="nfs" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="obs" class="form-label">Observação:</label>
+            <textarea class="form-control" id="obs"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="total_volumes" class="form-label">Total de Volumes:</label>
+            <input type="number" class="form-control" id="total_volumes" value="1" required>
+        </div>
+        <div class="mb-3">
+            <label for="largura" class="form-label">Largura (cm):</label>
+            <input type="number" class="form-control" id="largura" value="10" required>
+        </div>
+        <div class="mb-3">
+            <label for="altura" class="form-label">Altura (cm):</label>
+            <input type="number" class="form-control" id="altura" value="5" required>
+        </div>
+        <button type="button" class="btn btn-primary" id="gerarEtiquetaBtn">Gerar Etiqueta</button>
     </form>
+
+    <script>
+        document.getElementById("gerarEtiquetaBtn").addEventListener("click", function() {
+            let data = {
+                remetente: document.getElementById("remetente").value,
+                destinatario: document.getElementById("destinatario").value,
+                cte: document.getElementById("cte").value,
+                nfs: document.getElementById("nfs").value,
+                obs: document.getElementById("obs").value,
+                total_volumes: parseInt(document.getElementById("total_volumes").value),
+                largura: parseFloat(document.getElementById("largura").value),
+                altura: parseFloat(document.getElementById("altura").value)
+            };
+
+            fetch("/gerar_etiqueta", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Erro ao gerar etiqueta.");
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = "etiqueta.pdf";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            })
+            .catch(error => {
+                alert("Erro ao gerar etiqueta: " + error.message);
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
