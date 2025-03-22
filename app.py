@@ -69,10 +69,15 @@ def gerar_etiqueta():
 
         # Criar um buffer de memória para armazenar o PDF
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, dest='S').encode('latin1')  # Corrige o problema de encoding
-        pdf_output.seek(0)  # Move o ponteiro para o início do arquivo
+        pdf.output(pdf_output, dest='S')  # Salvar diretamente no buffer
+        pdf_output.seek(0)  # Mover o ponteiro para o início
 
-        return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
+        return send_file(
+            pdf_output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="etiqueta.pdf"
+        )
 
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
