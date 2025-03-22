@@ -4,39 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Etiquetas</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
-        form { max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
-        label, input, textarea { width: 100%; display: block; margin-bottom: 10px; }
-        button { padding: 10px 15px; background: #28a745; color: white; border: none; cursor: pointer; }
-    </style>
 </head>
 <body>
     <h1>Gerador de Etiquetas</h1>
-    <form action="/gerar_etiqueta" method="POST" target="_blank">
+    <form action="/gerar_etiqueta" method="post">
         <label>Remetente:</label>
-        <input type="text" name="remetente" required>
+        <input type="text" name="remetente" required><br>
 
         <label>Destinatário:</label>
-        <input type="text" name="destinatario" required>
+        <input type="text" name="destinatario" required><br>
 
         <label>CTE:</label>
-        <input type="text" name="cte" required>
+        <input type="text" name="cte" required><br>
 
         <label>Notas Fiscais:</label>
-        <textarea name="nfs" required></textarea>
+        <textarea name="nfs" required></textarea><br>
 
-        <label>Observação:</label>
-        <textarea name="obs"></textarea>
+        <label>Observações:</label>
+        <textarea name="obs"></textarea><br>
 
         <label>Total de Volumes:</label>
-        <input type="number" name="total_volumes" min="1" required>
+        <input type="number" name="total_volumes" min="1" required><br>
 
         <label>Largura (cm):</label>
-        <input type="number" name="largura" step="0.1" required>
+        <input type="number" name="largura" step="0.1" required><br>
 
         <label>Altura (cm):</label>
-        <input type="number" name="altura" step="0.1" required>
+        <input type="number" name="altura" step="0.1" required><br>
 
         <button type="submit">Gerar Etiqueta</button>
     </form>
