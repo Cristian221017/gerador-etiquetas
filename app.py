@@ -13,31 +13,32 @@ class EtiquetaPDF(FPDF):
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_margins(5, 5, 5)
         self.set_auto_page_break(auto=False, margin=5)
+        
         self.set_font("Arial", size=8, style='B')
         self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
         self.cell(0, 5, remetente.strip(), ln=True)
-        
+
         self.set_font("Arial", size=8, style='B')
         self.cell(20, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
         self.cell(0, 5, destinatario.strip(), ln=True)
-        
+
         self.set_font("Arial", size=12, style='B')
         self.cell(15, 5, "CTE:", ln=False)
         self.set_font("Arial", size=12)
         self.cell(50, 5, cte.strip(), ln=False)
-        
+
         self.set_font("Arial", size=12, style='B')
         self.cell(20, 5, "Volumes:", ln=False)
         self.set_font("Arial", size=12)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
-        
+
         self.set_font("Arial", size=8, style='B')
         self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
         self.multi_cell(0, 5, nfs.strip())
-        
+
         self.set_font("Arial", size=8, style='B')
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=8)
@@ -49,11 +50,11 @@ def home():
 
 @app.route("/gerar_etiqueta", methods=["POST"])
 def gerar_etiqueta():
+    if request.content_type != 'application/json':
+        return jsonify({"erro": "O Content-Type deve ser application/json"}), 415
+    
     try:
-        if not request.is_json:
-            return jsonify({"erro": "O Content-Type deve ser application/json"}), 415
-        
-        data = request.get_json()
+        data = request.json
         remetente = data.get("remetente", "Remetente Padrão")
         destinatario = data.get("destinatario", "Destinatário Padrão")
         cte = data.get("cte", "000000")
@@ -64,15 +65,15 @@ def gerar_etiqueta():
         altura_cm = float(data.get("altura", 5))
 
         pdf = EtiquetaPDF(largura_cm, altura_cm)
-        
+        pdf_output = io.BytesIO()
+
         for volume in range(1, total_volumes + 1):
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
-
-        pdf_output = io.BytesIO()
-        pdf.output(pdf_output, dest='F')
-        pdf_output.seek(0)
         
+        pdf.output(pdf_output, dest='F')  # Salva corretamente no buffer
+        pdf_output.seek(0)
+
         return send_file(
             pdf_output,
             mimetype="application/pdf",
@@ -84,6 +85,24 @@ def gerar_etiqueta():
         return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
     except Exception as e:
         return jsonify({"erro": f"Erro interno do servidor: {str(e)}"}), 500
+
+@app.route("/test_pdf", methods=["GET"])
+def test_pdf():
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Test PDF", ln=1, align="C")
+
+    pdf_output = io.BytesIO()
+    pdf.output(pdf_output, dest='F')  # Ajustado para evitar erro com BytesIO
+    pdf_output.seek(0)
+
+    return send_file(
+        pdf_output,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="test.pdf"
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
