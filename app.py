@@ -1,51 +1,39 @@
 from flask import Flask, request, send_file, render_template, jsonify
-from fpdf import FPDF
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 import io
 
 app = Flask(__name__, template_folder="templates")
 
-class EtiquetaPDF(FPDF):
-    def __init__(self, largura_cm, altura_cm):
-        largura_mm = largura_cm * 10
-        altura_mm = altura_cm * 10
-        super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
-        self.largura_mm = largura_mm
-        self.altura_mm = altura_mm
+def criar_pdf(remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
 
-    def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        self.set_margins(5, 5, 5)
-        self.set_auto_page_break(auto=False, margin=5)
-        self.add_page()
-
-        self.set_font("Arial", size=8, style='B')
-        self.cell(20, 5, "Remetente:", ln=False)
-        self.set_font("Arial", size=8)
-        self.cell(0, 5, remetente.strip(), ln=True)
-
-        self.set_font("Arial", size=8, style='B')
-        self.cell(20, 5, "Destinatário:", ln=False)
-        self.set_font("Arial", size=8)
-        self.cell(0, 5, destinatario.strip(), ln=True)
-
-        self.set_font("Arial", size=12, style='B')
-        self.cell(15, 5, "CTE:", ln=False)
-        self.set_font("Arial", size=12)
-        self.cell(50, 5, cte.strip(), ln=False)
-
-        self.set_font("Arial", size=12, style='B')
-        self.cell(20, 5, "Volumes:", ln=False)
-        self.set_font("Arial", size=12)
-        self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
-
-        self.set_font("Arial", size=8, style='B')
-        self.cell(0, 5, "Notas Fiscais:", ln=True)
-        self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, nfs.strip())
-
-        self.set_font("Arial", size=8, style='B')
-        self.cell(0, 5, "Observação:", ln=True)
-        self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, obs.strip())
+    pdf.setFont("Helvetica", 12)
+    
+    pdf.drawString(50, height - 50, f"Remetente: {remetente}")
+    pdf.drawString(50, height - 70, f"Destinatário: {destinatario}")
+    pdf.drawString(50, height - 90, f"CTE: {cte}")
+    pdf.drawString(50, height - 110, f"Volumes: {volume_atual}/{total_volumes}")
+    
+    pdf.drawString(50, height - 140, "Notas Fiscais:")
+    text_object = pdf.beginText(50, height - 160)
+    text_object.setFont("Helvetica", 10)
+    for line in nfs.split("\n"):
+        text_object.textLine(line)
+    pdf.drawText(text_object)
+    
+    pdf.drawString(50, height - 200, "Observações:")
+    text_object = pdf.beginText(50, height - 220)
+    text_object.setFont("Helvetica", 10)
+    for line in obs.split("\n"):
+        text_object.textLine(line)
+    pdf.drawText(text_object)
+    
+    pdf.save()
+    buffer.seek(0)
+    return buffer
 
 @app.route("/")
 def home():
@@ -67,20 +55,11 @@ def gerar_etiqueta():
         nfs = data.get("nfs", "NF Padrão")
         obs = data.get("obs", "Sem observação")
         total_volumes = int(data.get("total_volumes", 1))
-        largura_cm = float(data.get("largura", 10))
-        altura_cm = float(data.get("altura", 5))
 
-        pdf = EtiquetaPDF(largura_cm, altura_cm)
-
-        for volume in range(1, total_volumes + 1):
-            pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
-
-        pdf_output = io.BytesIO()
-        pdf.output(pdf_output, dest="S")
-        pdf_output.seek(0)
+        pdf_buffer = criar_pdf(remetente, destinatario, cte, nfs, obs, 1, total_volumes)
 
         return send_file(
-            pdf_output,
+            pdf_buffer,
             mimetype="application/pdf",
             as_attachment=True,
             download_name="etiqueta.pdf"
@@ -93,17 +72,10 @@ def gerar_etiqueta():
 
 @app.route("/test_pdf", methods=["GET"])
 def test_pdf():
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Teste de Geração de PDF", ln=1, align="C")
-
-    pdf_output = io.BytesIO()
-    pdf.output(pdf_output, dest="S")
-    pdf_output.seek(0)
+    pdf_buffer = criar_pdf("Teste", "Destino Teste", "123456", "NF123", "Teste de PDF", 1, 1)
 
     return send_file(
-        pdf_output,
+        pdf_buffer,
         mimetype="application/pdf",
         as_attachment=True,
         download_name="teste.pdf"
