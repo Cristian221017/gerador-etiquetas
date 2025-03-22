@@ -7,20 +7,53 @@ app = Flask(__name__)
 
 def gerar_pdf(remetente, destinatario, cte, nfs, obs, total_volumes, largura_cm, altura_cm):
     buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=(largura_cm * 28.35, altura_cm * 28.35))  # 1 cm = 28.35 pts
-    pdf.setFont("Helvetica", 10)
+    pdf = canvas.Canvas(buffer, pagesize=(largura_cm * 28.35, altura_cm * 28.35))  # Convertendo cm para pontos
 
-    # Adiciona os detalhes ao PDF
-    pdf.drawString(20, altura_cm * 28, f"Remetente: {remetente}")
-    pdf.drawString(20, altura_cm * 26, f"Destinatário: {destinatario}")
-    pdf.drawString(20, altura_cm * 24, f"CTE: {cte}")
-    pdf.drawString(20, altura_cm * 22, f"Volumes: {total_volumes}")
-    pdf.drawString(20, altura_cm * 20, f"Notas Fiscais: {nfs}")
-    pdf.drawString(20, altura_cm * 18, f"Observação: {obs}")
+    # Configurações de fonte e margens
+    margem = 10  # Margem interna
+    fonte_titulo = 10
+    fonte_texto = 8
+    linha_atual = altura_cm * 28 - margem  # Define a linha inicial do texto
 
-    pdf.showPage()
+    for volume in range(1, total_volumes + 1):
+        pdf.setFont("Helvetica-Bold", fonte_titulo)
+        pdf.drawString(margem, linha_atual, f"Remetente:")
+        pdf.setFont("Helvetica", fonte_texto)
+        pdf.drawString(margem + 60, linha_atual, remetente)
+
+        linha_atual -= 15
+        pdf.setFont("Helvetica-Bold", fonte_titulo)
+        pdf.drawString(margem, linha_atual, "Destinatário:")
+        pdf.setFont("Helvetica", fonte_texto)
+        pdf.drawString(margem + 60, linha_atual, destinatario)
+
+        linha_atual -= 15
+        pdf.setFont("Helvetica-Bold", fonte_titulo)
+        pdf.drawString(margem, linha_atual, "CTE:")
+        pdf.setFont("Helvetica", fonte_texto)
+        pdf.drawString(margem + 40, linha_atual, cte)
+
+        linha_atual -= 15
+        pdf.setFont("Helvetica-Bold", fonte_titulo)
+        pdf.drawString(margem, linha_atual, "Volumes:")
+        pdf.setFont("Helvetica", fonte_texto)
+        pdf.drawString(margem + 50, linha_atual, f"{volume}/{total_volumes}")
+
+        linha_atual -= 15
+        pdf.setFont("Helvetica-Bold", fonte_titulo)
+        pdf.drawString(margem, linha_atual, "Notas Fiscais:")
+        pdf.setFont("Helvetica", fonte_texto)
+        pdf.drawString(margem + 80, linha_atual, nfs)
+
+        linha_atual -= 15
+        pdf.setFont("Helvetica-Bold", fonte_titulo)
+        pdf.drawString(margem, linha_atual, "Observação:")
+        pdf.setFont("Helvetica", fonte_texto)
+        pdf.drawString(margem + 80, linha_atual, obs)
+
+        pdf.showPage()  # Adiciona uma nova página para a próxima etiqueta
+
     pdf.save()
-
     buffer.seek(0)
     return buffer
 
@@ -52,18 +85,6 @@ def gerar_etiqueta():
         return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
     except Exception as e:
         return jsonify({"erro": f"Erro interno do servidor: {str(e)}"}), 500
-
-@app.route("/test_pdf", methods=["GET"])
-def test_pdf():
-    buffer = io.BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=letter)
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(100, 750, "Teste de PDF Gerado com ReportLab!")
-    pdf.showPage()
-    pdf.save()
-
-    buffer.seek(0)
-    return send_file(buffer, mimetype="application/pdf", as_attachment=True, download_name="test.pdf")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
