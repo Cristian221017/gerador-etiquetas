@@ -6,33 +6,33 @@
     <title>Gerador de Etiquetas</title>
 </head>
 <body>
-    <h2>Gerador de Etiquetas</h2>
-    <form action="/gerar_etiqueta" method="POST">
+    <h1>Gerar Etiqueta</h1>
+    <form action="/gerar_etiqueta" method="POST" target="_blank">
         <label>Remetente:</label>
-        <input type="text" name="remetente" required><br>
+        <input type="text" name="remetente" value="Empresa X" required><br>
 
         <label>Destinatário:</label>
-        <input type="text" name="destinatario" required><br>
+        <input type="text" name="destinatario" value="Cliente Y" required><br>
 
         <label>CTE:</label>
-        <input type="text" name="cte" required><br>
+        <input type="text" name="cte" value="123456" required><br>
 
         <label>Notas Fiscais:</label>
-        <input type="text" name="nfs" required><br>
+        <input type="text" name="nfs" value="NF123456" required><br>
 
-        <label>Observação:</label>
-        <input type="text" name="obs"><br>
+        <label>Observações:</label>
+        <input type="text" name="obs" value="Manusear com cuidado"><br>
 
         <label>Total de Volumes:</label>
-        <input type="number" name="total_volumes" required><br>
+        <input type="number" name="total_volumes" value="5" required><br>
 
-        <label>Largura da Etiqueta (cm):</label>
-        <input type="number" name="largura" step="0.1" required><br>
+        <label>Largura (cm):</label>
+        <input type="number" step="0.1" name="largura" value="10" required><br>
 
-        <label>Altura da Etiqueta (cm):</label>
-        <input type="number" name="altura" step="0.1" required><br>
+        <label>Altura (cm):</label>
+        <input type="number" step="0.1" name="altura" value="5" required><br>
 
-        <button type="submit">Gerar Etiqueta</button>
+        <button type="submit">Gerar PDF</button>
     </form>
 </body>
 </html>
