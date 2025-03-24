@@ -21,27 +21,30 @@ class EtiquetaPDF(FPDF):
         largura_texto = self.largura_mm - 10  # Largura útil da etiqueta
 
         def adicionar_campo(titulo, conteudo):
-            self.set_font("Arial", style='B', size=7)
-            self.cell(25, 4, f"{titulo}:", ln=False)
-            self.set_font("Arial", size=7)
-            self.multi_cell(largura_texto - 25, 4, conteudo.strip(), align='L')
+            self.set_font("Arial", style='B', size=9)
+            self.cell(25, 5, f"{titulo}:", ln=False)
+            self.set_font("Arial", size=9)
+            self.multi_cell(largura_texto - 25, 5, conteudo.strip(), align='L')
             self.ln(1)  # Pequeno espaçamento entre os campos
 
-        # ORIGEM x DESTINO no topo, mantendo 12px
-        self.set_font("Arial", size=12, style='B')
-        self.cell(0, 7, f"{origem} x {destino}", ln=True, align='C')
+        # ORIGEM x DESTINO dentro da caixa preta com texto branco
+        self.set_fill_color(0, 0, 0)  # Fundo preto
+        self.set_text_color(255, 255, 255)  # Texto branco
+        self.set_font("Arial", style='B', size=12)
+        self.cell(0, 8, f"{origem} x {destino}", ln=True, align='C', fill=True)
+        self.set_text_color(0, 0, 0)  # Resetando texto para preto
         self.ln(2)
 
-        # Adicionando os campos padrão (Reduzido para 7px)
+        # Adicionando os campos padrão
         adicionar_campo("Remetente", remetente)
         adicionar_campo("Destinatário", destinatario)
 
         # CTE e Volumes dentro de uma caixa preta com texto branco
         self.set_fill_color(0, 0, 0)  # Define a cor de fundo como preta
         self.set_text_color(255, 255, 255)  # Define o texto como branco
-        self.set_font("Arial", style='B', size=9)
+        self.set_font("Arial", style='B', size=12)
         self.cell(self.largura_mm / 2 - 5, 6, f"CTE: {cte}", ln=False, align='C', fill=True)
-        self.cell(self.largura_mm / 2 - 5, 6, f"Volumes: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
+        self.cell(self.largura_mm / 2 - 5, 6, f"VOLUMES: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
         self.set_text_color(0, 0, 0)  # Retorna o texto para preto
         self.ln(2)
 
@@ -60,13 +63,13 @@ def gerar_etiqueta():
 
     try:
         data = request.get_json()
-        origem = data.get("origem", "Origem Padrão")
-        destino = data.get("destino", "Destino Padrão")
-        remetente = data.get("remetente", "Remetente Padrão")
-        destinatario = data.get("destinatario", "Destinatário Padrão")
-        cte = data.get("cte", "000000")
-        nfs = data.get("nfs", "NF Padrão")
-        obs = data.get("obs", "Sem observação")
+        origem = data.get("origem", "ORIGEM PADRÃO").upper()
+        destino = data.get("destino", "DESTINO PADRÃO").upper()
+        remetente = data.get("remetente", "REMETENTE PADRÃO").upper()
+        destinatario = data.get("destinatario", "DESTINATÁRIO PADRÃO").upper()
+        cte = data.get("cte", "000000").upper()
+        nfs = data.get("nfs", "NF PADRÃO").upper()
+        obs = data.get("obs", "SEM OBSERVAÇÃO").upper()
         total_volumes = int(data.get("total_volumes", 1))
         largura_cm = float(data.get("largura", 10))
         altura_cm = float(data.get("altura", 5))
@@ -82,7 +85,6 @@ def gerar_etiqueta():
         pdf_output.write(pdf.output(dest='S'))
         pdf_output.seek(0)
 
-        # 🚨 Verificação extra para evitar arquivos vazios
         if pdf_output.getbuffer().nbytes == 0:
             return jsonify({"erro": "Erro ao gerar PDF: Arquivo vazio"}), 500
 
