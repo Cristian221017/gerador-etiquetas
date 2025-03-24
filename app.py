@@ -44,8 +44,10 @@ class EtiquetaPDF(FPDF):
         self.cell(25, 5, "Volumes:", ln=False)
         self.set_font("Arial", size=10)
 
-        # 🔹 **Ajuste responsivo da posição do volume**
-        self.cell(self.largura_mm * 0.2, 5, f"{volume_atual}/{total_volumes}", ln=True)
+        # 🔹 **Ajuste da posição do volume no meio da etiqueta**
+        pos_x = self.largura_mm * 0.5 - 10  # Centralizando
+        self.set_x(pos_x)
+        self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True, align="C")
 
         # Notas Fiscais
         self.set_font("Arial", style='B', size=8)
