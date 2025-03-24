@@ -19,9 +19,8 @@ class EtiquetaPDF(FPDF):
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_xy(5, 5)
-        largura_texto = self.largura_mm - 10
-        espaco = 1  # Pequeno ajuste no espaçamento para manter alinhamento correto
-        
+        largura_texto = self.largura_mm - 10  # Define o limite da largura do texto
+
         # Remetente
         self.set_font("Arial", style='B', size=8)
         self.cell(20, 5, "Remetente:", ln=False)
@@ -35,27 +34,27 @@ class EtiquetaPDF(FPDF):
         self.cell(0, 5, destinatario.strip(), ln=True)
 
         # CTE e Volumes na mesma linha
-        self.set_font("Arial", style='B', size=12)
+        self.set_font("Arial", style='B', size=10)
         self.cell(15, 5, "CTE:", ln=False)
-        self.set_font("Arial", size=12)
+        self.set_font("Arial", size=10)
         self.cell(self.largura_mm / 2 - 25, 5, cte.strip(), ln=False)
 
-        self.set_font("Arial", style='B', size=12)
+        self.set_font("Arial", style='B', size=10)
         self.cell(20, 5, "Volumes:", ln=False)
-        self.set_font("Arial", size=12)
+        self.set_font("Arial", size=10)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
         # Notas Fiscais
         self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, nfs.strip())
+        self.multi_cell(largura_texto, 5, nfs.strip())
 
-        # Observação
+        # **Ajuste no Observações: garantindo alinhamento correto**
         self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Observação:", ln=True)
+        self.cell(0, 5, "Observação:", ln=True)  # 🔥 Agora sempre começando no lado esquerdo
         self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, obs.strip())
+        self.multi_cell(largura_texto, 5, obs.strip())  # 🔥 Respeitando largura da etiqueta
 
 @app.route("/")
 def home():
