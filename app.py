@@ -87,7 +87,7 @@ def gerar_etiqueta():
         pdf_output = io.BytesIO()
 
         # Salvar o PDF corretamente no buffer
-        pdf.output(pdf_output, 'S')  # ⚠️ ALTERADO para 'S' que retorna uma string binária
+        pdf_output.write(pdf.output(dest='S').encode('latin1'))  # ⚠️ CORRIGIDO: Converte para binário corretamente
         pdf_output.seek(0)  # Garante que o buffer seja lido do início
 
         # 🚨 Verificação extra para evitar arquivos vazios
