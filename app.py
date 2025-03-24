@@ -83,9 +83,13 @@ def gerar_etiqueta():
         # Criar um buffer de memória para o PDF
         pdf_output = io.BytesIO()
         
-        # Escrever o PDF corretamente no buffer
-        pdf.output(pdf_output, dest='F')  # 'F' garante que o arquivo é fechado corretamente
-        pdf_output.seek(0)  # Move para o início para garantir que o conteúdo seja lido corretamente
+        # Salvar corretamente o PDF no buffer
+        pdf.output(pdf_output, dest='F')  # 'F' é importante para escrever corretamente
+        pdf_output.seek(0)  # Certificar que o ponteiro está no início do arquivo
+
+        # Verificar se o buffer realmente contém dados antes de enviar
+        if pdf_output.getbuffer().nbytes == 0:
+            return jsonify({"erro": "Erro ao gerar PDF: Arquivo vazio"}), 500
 
         return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
 
