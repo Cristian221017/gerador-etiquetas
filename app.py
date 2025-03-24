@@ -18,38 +18,22 @@ class EtiquetaPDF(FPDF):
         pass  # Removendo cabeçalho para evitar sobreposição
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        largura_texto = self.largura_mm - 10  # Ajustando para evitar estouro de texto
-        fonte_tamanho = 8 if self.largura_mm > 50 else 6  # 🔥 Redução automática se largura for pequena
+        largura_texto = self.largura_mm - 10  # Largura útil da etiqueta
+        
+        def adicionar_campo(titulo, conteudo):
+            self.set_font("Arial", style='B', size=9)
+            self.cell(25, 5, f"{titulo}:", ln=False)
+            self.set_font("Arial", size=9)
+            self.multi_cell(largura_texto - 25, 5, conteudo.strip(), align='L')
+            self.ln(1)  # Pequeno espaçamento entre os campos
 
-        def adicionar_texto(titulo, conteudo):
-            """ Função para adicionar títulos e conteúdos corretamente formatados """
-            self.set_font("Arial", style='B', size=fonte_tamanho)
-            self.cell(25, 5, f"{titulo} ", ln=False)  # 🔥 Mantém alinhamento
-            self.set_font("Arial", size=fonte_tamanho)
-            self.multi_cell(largura_texto - 25, 5, conteudo.strip())  # 🔥 Garante que o texto fique dentro da etiqueta
-
-        # **Remetente**
-        adicionar_texto("Remetente:", remetente)
-
-        # **Destinatário**
-        adicionar_texto("Destinatário:", destinatario)
-
-        # **CTE e Volumes na mesma linha**
-        self.set_font("Arial", style='B', size=fonte_tamanho)
-        self.cell(15, 5, "CTE:", ln=False)
-        self.set_font("Arial", size=fonte_tamanho)
-        self.cell(50, 5, cte.strip(), ln=False)
-
-        self.set_font("Arial", style='B', size=fonte_tamanho)
-        self.cell(20, 5, "Volumes:", ln=False)
-        self.set_font("Arial", size=fonte_tamanho)
-        self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
-
-        # **Notas Fiscais**
-        adicionar_texto("Notas Fiscais:", nfs)
-
-        # **Observação** (🔥 AGORA 100% CORRIGIDO 🔥)
-        adicionar_texto("Observação:", obs)
+        # Adicionando os campos à etiqueta
+        adicionar_campo("Remetente", remetente)
+        adicionar_campo("Destinatário", destinatario)
+        adicionar_campo("CTE", cte)
+        adicionar_campo("Volumes", f"{volume_atual}/{total_volumes}")
+        adicionar_campo("Notas Fiscais", nfs)
+        adicionar_campo("Observação", obs)
 
 @app.route("/")
 def home():
@@ -77,10 +61,12 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        # Criando buffer de memória (🔥 FINALMENTE CORRIGIDO 🔥)
+        # Criando buffer de memória
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, 'F')  # ✅ Garante que o PDF seja gerado corretamente
-        pdf_output.seek(0)
+
+        # Salvar o PDF corretamente no buffer
+        pdf_output.write(pdf.output(dest='S').encode('latin1'))  # ⚠️ CORRIGIDO: Converte para binário corretamente
+        pdf_output.seek(0)  # Garante que o buffer seja lido do início
 
         # 🚨 Verificação extra para evitar arquivos vazios
         if pdf_output.getbuffer().nbytes == 0:
