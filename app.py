@@ -11,15 +11,14 @@ class EtiquetaPDF(FPDF):
         super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
         self.largura_mm = largura_mm
         self.altura_mm = altura_mm
+        self.set_margins(5, 5, 5)
+        self.set_auto_page_break(auto=False, margin=5)
 
     def header(self):
         pass  # Removendo cabeçalho para evitar sobreposição
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        self.set_margins(5, 5, 5)
-        self.set_auto_page_break(auto=False, margin=5)
-
-        # Adicionar títulos e informações em negrito
+        # Configuração de margens e fontes
         self.set_font("Arial", size=8, style='B')
         self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
@@ -30,18 +29,18 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", size=8)
         self.cell(0, 5, destinatario.strip(), ln=True)
 
-        # CTE e Volume ajustado responsivamente
+        # CTE e Volume ajustados corretamente
         self.set_font("Arial", size=12, style='B')
         self.cell(15, 5, "CTE:", ln=False)
         self.set_font("Arial", size=12)
-        self.cell(self.largura_mm * 0.4, 5, cte.strip(), ln=False)  # Ajuste responsivo
+        self.cell(self.largura_mm / 2 - 25, 5, cte.strip(), ln=False)
 
         self.set_font("Arial", size=12, style='B')
         self.cell(20, 5, "Volumes:", ln=False)
         self.set_font("Arial", size=12)
 
-        # 🔹 Ajuste: Movendo a posição do volume mais para a esquerda dentro da etiqueta
-        self.cell(self.largura_mm * 0.15, 5, f"{volume_atual}/{total_volumes}", ln=True)
+        # 🔹 **Ajuste responsivo na posição do volume**
+        self.cell(self.largura_mm * 0.3, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
         # Notas Fiscais
         self.set_font("Arial", size=8, style='B')
@@ -84,6 +83,10 @@ def gerar_etiqueta():
         pdf_output = io.BytesIO()
         pdf.output(pdf_output, dest='S')
         pdf_output.seek(0)
+
+        # ✅ **Garantindo que o PDF não esteja vazio**
+        if pdf_output.getbuffer().nbytes == 0:
+            return jsonify({"erro": "Erro ao gerar PDF: Arquivo vazio"}), 500
 
         return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
 
