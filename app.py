@@ -45,12 +45,62 @@ class EtiquetaPDF(FPDF):
 
         # **Notas Fiscais**
         self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Notas Fiscais:", ln=True)
+        self.cell(0, 5, "Notas Fiscais:", ln=True)  # 🔥 Mantém alinhamento correto
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, nfs.strip(), align='L') # Alinhamento à esquerda
+        self.multi_cell(largura_texto, 5, nfs.strip())
 
-        # **Observação** (✅ Agora ajustado para garantir alinhamento)
+        # **Observação** (🔥 AGORA 100% CORRIGIDO 🔥)
         self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Observação:", ln=True)
+        self.cell(0, 5, "Observação:", ln=True)  # ✅ Agora está alinhado corretamente
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, obs.strip(), align='L') # Alinhamento à esquerda
+        self.multi_cell(largura_texto, 5, obs.strip())  # 🔥 Agora sempre fica abaixo, nunca deslocado para a direita
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/gerar_etiqueta", methods=["POST"])
+def gerar_etiqueta():
+    if not request.is_json:
+        return jsonify({"erro": "O Content-Type deve ser application/json"}), 400
+
+    try:
+        data = request.get_json()
+        remetente = data.get("remetente", "Remetente Padrão")
+        destinatario = data.get("destinatario", "Destinatário Padrão")
+        cte = data.get("cte", "000000")
+        nfs = data.get("nfs", "NF Padrão")
+        obs = data.get("obs", "Sem observação")
+        total_volumes = int(data.get("total_volumes", 1))
+        largura_cm = float(data.get("largura", 10))
+        altura_cm = float(data.get("altura", 5))
+
+        pdf = EtiquetaPDF(largura_cm, altura_cm)
+
+        for volume in range(1, total_volumes + 1):
+            pdf.add_page()
+            pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
+
+        # Criando buffer de memória (🔥 FINALMENTE CORRIGIDO 🔥)
+        pdf_output = io.BytesIO()
+        pdf.output(pdf_output, 'F')  # ✅ Garante que o PDF seja gerado corretamente
+        pdf_output.seek(0)
+
+        # 🚨 Verificação extra para evitar arquivos vazios
+        if pdf_output.getbuffer().nbytes == 0:
+            return jsonify({"erro": "Erro ao gerar PDF: Arquivo vazio"}), 500
+
+        return send_file(
+            pdf_output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="etiqueta.pdf"
+        )
+
+    except ValueError as ve:
+        return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
+    except Exception as e:
+        return jsonify({"erro": f"Erro interno do servidor: {str(e)}"}), 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
