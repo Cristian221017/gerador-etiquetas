@@ -18,38 +18,41 @@ class EtiquetaPDF(FPDF):
         pass  # Removendo cabeçalho para evitar sobreposição
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        margem = 5  # Margem interna
+        self.set_xy(5, 5)
+        self.set_font("Arial", style='B', size=8)
+        
+        # Definição da largura máxima para cada linha
+        largura_texto = self.largura_mm - 10
 
-        self.set_xy(margem, margem)  # Definir a posição inicial
-        self.set_font("Arial", "B", 9)
+        # Títulos e textos formatados corretamente
         self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
-        self.cell(0, 5, remetente.strip(), ln=True)
+        self.multi_cell(largura_texto - 20, 5, remetente.strip())
 
-        self.set_font("Arial", "B", 9)
+        self.set_font("Arial", style='B', size=8)
         self.cell(20, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
-        self.cell(0, 5, destinatario.strip(), ln=True)
+        self.multi_cell(largura_texto - 20, 5, destinatario.strip())
 
-        self.set_font("Arial", "B", 10)
+        self.set_font("Arial", style='B', size=10)
         self.cell(15, 5, "CTE:", ln=False)
         self.set_font("Arial", size=10)
-        self.cell(self.largura_mm / 2 - 25, 5, cte.strip(), ln=False)
+        self.cell(50, 5, cte.strip(), ln=False)
 
-        self.set_font("Arial", "B", 10)
+        self.set_font("Arial", style='B', size=10)
         self.cell(20, 5, "Volumes:", ln=False)
         self.set_font("Arial", size=10)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
-        self.set_font("Arial", "B", 8)
+        self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
-        self.multi_cell(self.largura_mm - 10, 5, nfs.strip())
+        self.multi_cell(largura_texto, 5, nfs.strip())
 
-        self.set_font("Arial", "B", 8)
+        self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=8)
-        self.multi_cell(self.largura_mm - 10, 5, obs.strip())
+        self.multi_cell(largura_texto, 5, obs.strip())
 
 @app.route("/")
 def home():
