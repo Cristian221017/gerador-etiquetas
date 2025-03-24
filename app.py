@@ -19,47 +19,43 @@ class EtiquetaPDF(FPDF):
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_xy(5, 5)
-        self.set_font("Arial", style='B', size=8)
         largura_texto = self.largura_mm - 10
-        espaco = 1  # Reduzindo o espaçamento após os dois pontos
-
+        espaco = 1  # Pequeno ajuste no espaçamento para manter alinhamento correto
+        
         # Remetente
-        self.cell(25, 5, "Remetente:", ln=False)
-        self.set_x(self.get_x() + espaco)
+        self.set_font("Arial", style='B', size=8)
+        self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto - 25, 5, remetente.strip())
+        self.cell(0, 5, remetente.strip(), ln=True)
 
         # Destinatário
         self.set_font("Arial", style='B', size=8)
-        self.cell(25, 5, "Destinatário:", ln=False)
-        self.set_x(self.get_x() + espaco)
+        self.cell(20, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto - 25, 5, destinatario.strip())
+        self.cell(0, 5, destinatario.strip(), ln=True)
 
-        # CTE e Volume
-        self.set_font("Arial", style='B', size=10)
+        # CTE e Volumes na mesma linha
+        self.set_font("Arial", style='B', size=12)
         self.cell(15, 5, "CTE:", ln=False)
-        self.set_x(self.get_x() + espaco)
-        self.set_font("Arial", size=10)
-        self.cell(50, 5, cte.strip(), ln=False)
+        self.set_font("Arial", size=12)
+        self.cell(self.largura_mm / 2 - 25, 5, cte.strip(), ln=False)
 
-        self.set_font("Arial", style='B', size=10)
+        self.set_font("Arial", style='B', size=12)
         self.cell(20, 5, "Volumes:", ln=False)
-        self.set_x(self.get_x() + espaco)
-        self.set_font("Arial", size=10)
+        self.set_font("Arial", size=12)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
         # Notas Fiscais
         self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, nfs.strip())
+        self.multi_cell(0, 5, nfs.strip())
 
         # Observação
         self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, obs.strip())
+        self.multi_cell(0, 5, obs.strip())
 
 @app.route("/")
 def home():
@@ -89,11 +85,9 @@ def gerar_etiqueta():
 
         # Criando buffer de memória
         pdf_output = io.BytesIO()
-
-        # Salvar corretamente no buffer sem encode()
-        pdf_bytes = pdf.output(dest='S')  # O PDF já vem como bytes
+        pdf_bytes = pdf.output(dest='S')  # Gera os bytes do PDF corretamente
         pdf_output.write(pdf_bytes)
-        pdf_output.seek(0)  # Garante que o buffer seja lido do início
+        pdf_output.seek(0)
 
         # 🚨 Verificação extra para evitar arquivos vazios
         if pdf_output.getbuffer().nbytes == 0:
