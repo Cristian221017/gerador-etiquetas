@@ -22,25 +22,25 @@ class EtiquetaPDF(FPDF):
 
         # **Remetente**
         self.set_font("Arial", style='B', size=8)
-        self.cell(20, 5, "Remetente:", ln=False)
+        self.cell(25, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
-        self.cell(0, 5, remetente.strip(), ln=True)
+        self.multi_cell(0, 5, remetente.strip())  # 🔥 Agora mantém alinhamento
 
         # **Destinatário**
         self.set_font("Arial", style='B', size=8)
-        self.cell(20, 5, "Destinatário:", ln=False)
+        self.cell(25, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
-        self.cell(0, 5, destinatario.strip(), ln=True)
+        self.multi_cell(0, 5, destinatario.strip())
 
         # **CTE e Volumes na mesma linha**
-        self.set_font("Arial", style='B', size=12)
+        self.set_font("Arial", style='B', size=10)
         self.cell(15, 5, "CTE:", ln=False)
-        self.set_font("Arial", size=12)
-        self.cell(self.largura_mm / 2 - 25, 5, cte.strip(), ln=False)
+        self.set_font("Arial", size=10)
+        self.cell(50, 5, cte.strip(), ln=False)
 
-        self.set_font("Arial", style='B', size=12)
+        self.set_font("Arial", style='B', size=10)
         self.cell(20, 5, "Volumes:", ln=False)
-        self.set_font("Arial", size=12)
+        self.set_font("Arial", size=10)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
         # **Notas Fiscais**
@@ -51,9 +51,9 @@ class EtiquetaPDF(FPDF):
 
         # **Observação** (🔥 AGORA 100% CORRIGIDO 🔥)
         self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Observação:", ln=True)  # ✅ Agora está alinhado corretamente
+        self.cell(0, 5, "Observação:", ln=True)  # ✅ Mantém alinhado corretamente
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, obs.strip())  # 🔥 Agora sempre fica abaixo, nunca deslocado para a direita
+        self.multi_cell(largura_texto, 5, obs.strip())  # 🔥 Agora fica abaixo, nunca deslocado para a direita
 
 @app.route("/")
 def home():
