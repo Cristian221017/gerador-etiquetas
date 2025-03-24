@@ -19,13 +19,14 @@ class EtiquetaPDF(FPDF):
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         largura_texto = self.largura_mm - 10  # Ajustando para evitar estouro de texto
+        fonte_tamanho = 8 if self.largura_mm > 50 else 6  # 🔥 Redução automática se largura for pequena
 
-        def adicionar_texto(titulo, conteudo, negrito=True):
-            """ Função para adicionar títulos e conteúdos formatados corretamente """
-            self.set_font("Arial", style='B' if negrito else '', size=8)
+        def adicionar_texto(titulo, conteudo):
+            """ Função para adicionar títulos e conteúdos corretamente formatados """
+            self.set_font("Arial", style='B', size=fonte_tamanho)
             self.cell(25, 5, f"{titulo} ", ln=False)  # 🔥 Mantém alinhamento
-            self.set_font("Arial", size=8)
-            self.multi_cell(0, 5, conteudo.strip())  # 🔥 Mantém alinhamento correto
+            self.set_font("Arial", size=fonte_tamanho)
+            self.multi_cell(largura_texto - 25, 5, conteudo.strip())  # 🔥 Garante que o texto fique dentro da etiqueta
 
         # **Remetente**
         adicionar_texto("Remetente:", remetente)
@@ -34,14 +35,14 @@ class EtiquetaPDF(FPDF):
         adicionar_texto("Destinatário:", destinatario)
 
         # **CTE e Volumes na mesma linha**
-        self.set_font("Arial", style='B', size=10)
+        self.set_font("Arial", style='B', size=fonte_tamanho)
         self.cell(15, 5, "CTE:", ln=False)
-        self.set_font("Arial", size=10)
+        self.set_font("Arial", size=fonte_tamanho)
         self.cell(50, 5, cte.strip(), ln=False)
 
-        self.set_font("Arial", style='B', size=10)
+        self.set_font("Arial", style='B', size=fonte_tamanho)
         self.cell(20, 5, "Volumes:", ln=False)
-        self.set_font("Arial", size=10)
+        self.set_font("Arial", size=fonte_tamanho)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
         # **Notas Fiscais**
@@ -70,14 +71,7 @@ def gerar_etiqueta():
         largura_cm = float(data.get("largura", 10))
         altura_cm = float(data.get("altura", 5))
 
-        # 🔥 Se a largura for muito pequena, reduzimos a fonte para evitar erro de espaço
-        if largura_cm < 8:
-            font_size = 6  # Reduzindo fonte para espaços pequenos
-        else:
-            font_size = 8  # Fonte normal
-
         pdf = EtiquetaPDF(largura_cm, altura_cm)
-        pdf.set_font("Arial", size=font_size)  # Aplicando fonte corrigida
 
         for volume in range(1, total_volumes + 1):
             pdf.add_page()
