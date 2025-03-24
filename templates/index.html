@@ -44,5 +44,43 @@
         </div>
         <button type="button" class="btn btn-primary" id="gerarEtiquetaBtn">Gerar Etiqueta</button>
     </form>
+
+    <script>
+        document.getElementById("gerarEtiquetaBtn").addEventListener("click", function() {
+            let data = {
+                origem: document.getElementById("origem").value.toUpperCase(),
+                destino: document.getElementById("destino").value.toUpperCase(),
+                remetente: document.getElementById("remetente").value.toUpperCase(),
+                destinatario: document.getElementById("destinatario").value.toUpperCase(),
+                cte: document.getElementById("cte").value.toUpperCase(),
+                nfs: document.getElementById("nfs").value.toUpperCase(),
+                obs: document.getElementById("obs").value.toUpperCase(),
+                total_volumes: parseInt(document.getElementById("total_volumes").value) || 1
+            };
+
+            fetch("/gerar_etiqueta", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Erro ao gerar PDF");
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = "etiqueta.pdf";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            })
+            .catch(error => alert("Erro ao gerar etiqueta: " + error.message));
+        });
+    </script>
+
 </body>
 </html>
