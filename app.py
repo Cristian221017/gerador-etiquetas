@@ -19,42 +19,42 @@ class EtiquetaPDF(FPDF):
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_xy(5, 5)
-        largura_texto = self.largura_mm - 30  # Ajuste fino para respeitar limites da etiqueta
+        largura_texto = self.largura_mm - 10  # Mantendo a largura ajustada para evitar corte
 
-        # Remetente
+        # **Remetente**
         self.set_font("Arial", style='B', size=8)
-        self.cell(25, 5, "Remetente:", ln=False)
+        self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, remetente.strip())
+        self.cell(0, 5, remetente.strip(), ln=True)
 
-        # Destinatário
+        # **Destinatário**
         self.set_font("Arial", style='B', size=8)
-        self.cell(25, 5, "Destinatário:", ln=False)
+        self.cell(20, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, destinatario.strip())
+        self.cell(0, 5, destinatario.strip(), ln=True)
 
-        # CTE e Volumes na mesma linha
+        # **CTE e Volumes**
         self.set_font("Arial", style='B', size=10)
         self.cell(15, 5, "CTE:", ln=False)
         self.set_font("Arial", size=10)
-        self.cell(self.largura_mm / 2 - 25, 5, cte.strip(), ln=False)
+        self.cell(50, 5, cte.strip(), ln=False)
 
         self.set_font("Arial", style='B', size=10)
         self.cell(20, 5, "Volumes:", ln=False)
         self.set_font("Arial", size=10)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
-        # Notas Fiscais
+        # **Notas Fiscais**
         self.set_font("Arial", style='B', size=8)
-        self.cell(25, 5, "Notas Fiscais:", ln=False)
+        self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto, 5, nfs.strip())
 
-        # **Observação - Agora 100% alinhado corretamente!**
+        # **Observação (Corrigido para Alinhamento Perfeito)**
         self.set_font("Arial", style='B', size=8)
-        self.cell(25, 5, "Observação:", ln=False)  # 🔥 Agora idêntico aos outros títulos!
+        self.cell(0, 5, "Observação:", ln=True)  # 🔥 Agora idêntico aos outros títulos!
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, obs.strip())  # 🔥 Respeitando largura da etiqueta
+        self.multi_cell(largura_texto, 5, obs.strip())  # 🔥 Mantém alinhamento correto
 
 @app.route("/")
 def home():
@@ -84,7 +84,7 @@ def gerar_etiqueta():
 
         # Criando buffer de memória
         pdf_output = io.BytesIO()
-        pdf_bytes = pdf.output(dest='S')  # Gera os bytes do PDF corretamente
+        pdf_bytes = pdf.output(dest='S').encode('latin1')  # 🔥 CORRIGIDO para evitar erro de encoding
         pdf_output.write(pdf_bytes)
         pdf_output.seek(0)
 
