@@ -19,12 +19,12 @@ class EtiquetaPDF(FPDF):
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         largura_texto = self.largura_mm - 10  # Largura útil da etiqueta
-        
+
         def adicionar_campo(titulo, conteudo):
             self.set_font("Arial", style='B', size=9)
-            self.cell(25, 5, f"{titulo}:", ln=False)
+            self.cell(30, 5, f"{titulo}:", ln=False)
             self.set_font("Arial", size=9)
-            self.multi_cell(largura_texto - 25, 5, conteudo.strip(), align='L')
+            self.multi_cell(largura_texto - 30, 5, conteudo.strip(), align='L')
             self.ln(1)  # Pequeno espaçamento entre os campos
 
         # Adicionando os campos à etiqueta
@@ -61,12 +61,10 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        # Criando buffer de memória
+        # Criando buffer de memória para armazenar o PDF
         pdf_output = io.BytesIO()
-
-        # Salvar o PDF corretamente no buffer
-        pdf_output.write(pdf.output(dest='S').encode('latin1'))  # ⚠️ CORRIGIDO: Converte para binário corretamente
-        pdf_output.seek(0)  # Garante que o buffer seja lido do início
+        pdf_output.write(pdf.output(dest='S'))  # ⚠️ Removida a conversão para 'latin1'
+        pdf_output.seek(0)
 
         # 🚨 Verificação extra para evitar arquivos vazios
         if pdf_output.getbuffer().nbytes == 0:
