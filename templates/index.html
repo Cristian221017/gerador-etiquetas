@@ -11,12 +11,8 @@
 
     <form id="etiquetaForm">
         <div class="mb-3">
-            <label for="origem" class="form-label">Origem:</label>
-            <input type="text" class="form-control" id="origem" required>
-        </div>
-        <div class="mb-3">
-            <label for="destino" class="form-label">Destino:</label>
-            <input type="text" class="form-control" id="destino" required>
+            <label for="origem_destino" class="form-label">Origem x Destino:</label>
+            <input type="text" class="form-control" id="origem_destino" required>
         </div>
         <div class="mb-3">
             <label for="remetente" class="form-label">Remetente:</label>
@@ -38,40 +34,24 @@
             <label for="obs" class="form-label">Observação:</label>
             <textarea class="form-control" id="obs"></textarea>
         </div>
-        <div class="mb-3">
-            <label for="total_volumes" class="form-label">Total de Volumes:</label>
-            <input type="number" class="form-control" id="total_volumes" value="1" required min="1">
-        </div>
         <button type="button" class="btn btn-primary" id="gerarEtiquetaBtn">Gerar Etiqueta</button>
     </form>
 
     <script>
         document.getElementById("gerarEtiquetaBtn").addEventListener("click", function() {
             let data = {
-                origem: document.getElementById("origem").value,
-                destino: document.getElementById("destino").value,
+                origem_destino: document.getElementById("origem_destino").value,
                 remetente: document.getElementById("remetente").value,
                 destinatario: document.getElementById("destinatario").value,
                 cte: document.getElementById("cte").value,
                 nfs: document.getElementById("nfs").value,
-                obs: document.getElementById("obs").value,
-                total_volumes: parseInt(document.getElementById("total_volumes").value)
+                obs: document.getElementById("obs").value
             };
 
             fetch("/gerar_etiqueta", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
-            })
-            .then(response => response.blob())
-            .then(blob => {
-                let url = window.URL.createObjectURL(blob);
-                let a = document.createElement("a");
-                a.href = url;
-                a.download = "etiquetas.pdf";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
             });
         });
     </script>
