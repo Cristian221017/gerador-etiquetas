@@ -20,7 +20,7 @@ class EtiquetaPDF(FPDF):
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_xy(5, 5)
         self.set_font("Arial", style='B', size=8)
-        
+
         # Definição da largura máxima para cada linha
         largura_texto = self.largura_mm - 10
 
@@ -84,7 +84,7 @@ def gerar_etiqueta():
         pdf_output = io.BytesIO()
         
         # Salvar corretamente o PDF no buffer
-        pdf.output(pdf_output, dest='F')  # 'F' é importante para escrever corretamente
+        pdf.output(pdf_output, dest='S')  # 'S' garante a escrita correta no buffer
         pdf_output.seek(0)  # Certificar que o ponteiro está no início do arquivo
 
         # Verificar se o buffer realmente contém dados antes de enviar
