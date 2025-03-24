@@ -90,8 +90,8 @@ def gerar_etiqueta():
         # Criando buffer de memória
         pdf_output = io.BytesIO()
 
-        # Salvar corretamente no buffer (modo binário)
-        pdf_bytes = pdf.output(dest='S').encode('latin1')  # Garante que o PDF seja gerado corretamente
+        # Salvar corretamente no buffer sem encode()
+        pdf_bytes = pdf.output(dest='S')  # O PDF já vem como bytes
         pdf_output.write(pdf_bytes)
         pdf_output.seek(0)  # Garante que o buffer seja lido do início
 
