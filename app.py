@@ -21,34 +21,37 @@ class EtiquetaPDF(FPDF):
         self.set_xy(5, 5)
         self.set_font("Arial", style='B', size=8)
 
-        # Definição da largura máxima para cada linha
         largura_texto = self.largura_mm - 10
 
-        # Títulos e textos formatados corretamente
-        self.cell(20, 5, "Remetente:", ln=False)
+        # Remetente
+        self.cell(25, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto - 20, 5, remetente.strip())
+        self.multi_cell(largura_texto - 25, 5, remetente.strip())
 
+        # Destinatário
         self.set_font("Arial", style='B', size=8)
-        self.cell(20, 5, "Destinatário:", ln=False)
+        self.cell(25, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto - 20, 5, destinatario.strip())
+        self.multi_cell(largura_texto - 25, 5, destinatario.strip())
 
+        # CTE e Volume
         self.set_font("Arial", style='B', size=10)
         self.cell(15, 5, "CTE:", ln=False)
         self.set_font("Arial", size=10)
         self.cell(50, 5, cte.strip(), ln=False)
 
         self.set_font("Arial", style='B', size=10)
-        self.cell(20, 5, "Volumes:", ln=False)
+        self.cell(25, 5, "Volumes:", ln=False)
         self.set_font("Arial", size=10)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
+        # Notas Fiscais
         self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto, 5, nfs.strip())
 
+        # Observação
         self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=8)
@@ -80,14 +83,14 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        # Criar um buffer de memória para o PDF
+        # Criando buffer de memória
         pdf_output = io.BytesIO()
         
         # Salvar corretamente o PDF no buffer
-        pdf.output(pdf_output, dest='S')  # 'S' garante a escrita correta no buffer
-        pdf_output.seek(0)  # Certificar que o ponteiro está no início do arquivo
+        pdf.output(pdf_output, 'F')  
+        pdf_output.seek(0)  
 
-        # Verificar se o buffer realmente contém dados antes de enviar
+        # 🚨 Verificação extra para evitar arquivos vazios
         if pdf_output.getbuffer().nbytes == 0:
             return jsonify({"erro": "Erro ao gerar PDF: Arquivo vazio"}), 500
 
