@@ -63,20 +63,13 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Erro ao gerar PDF");
-                }
-                return response.blob();
-            })
+            .then(response => response.blob())
             .then(blob => {
                 let url = window.URL.createObjectURL(blob);
                 let a = document.createElement("a");
                 a.href = url;
                 a.download = "etiquetas.pdf";
-                document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
             })
             .catch(error => alert("Erro ao gerar etiqueta: " + error.message));
         });

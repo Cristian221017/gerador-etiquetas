@@ -18,41 +18,46 @@ class EtiquetaPDF(FPDF):
         pass  # Removendo cabeçalho para evitar sobreposição
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        # Configuração de margens e fontes
-        self.set_font("Arial", size=8, style='B')
-        self.cell(20, 5, "Remetente:", ln=False)
-        self.set_font("Arial", size=8)
-        self.cell(0, 5, remetente.strip(), ln=True)
+        self.set_xy(5, 5)
+        self.set_font("Arial", style='B', size=8)
 
-        self.set_font("Arial", size=8, style='B')
-        self.cell(20, 5, "Destinatário:", ln=False)
-        self.set_font("Arial", size=8)
-        self.cell(0, 5, destinatario.strip(), ln=True)
+        largura_texto = self.largura_mm - 10
 
-        # CTE e Volume ajustados corretamente
-        self.set_font("Arial", size=12, style='B')
+        # Remetente
+        self.cell(25, 5, "Remetente:", ln=False)
+        self.set_font("Arial", size=8)
+        self.multi_cell(largura_texto - 25, 5, remetente.strip())
+
+        # Destinatário
+        self.set_font("Arial", style='B', size=8)
+        self.cell(25, 5, "Destinatário:", ln=False)
+        self.set_font("Arial", size=8)
+        self.multi_cell(largura_texto - 25, 5, destinatario.strip())
+
+        # CTE e Volume
+        self.set_font("Arial", style='B', size=10)
         self.cell(15, 5, "CTE:", ln=False)
-        self.set_font("Arial", size=12)
-        self.cell(self.largura_mm / 2 - 25, 5, cte.strip(), ln=False)
+        self.set_font("Arial", size=10)
+        self.cell(50, 5, cte.strip(), ln=False)
 
-        self.set_font("Arial", size=12, style='B')
-        self.cell(20, 5, "Volumes:", ln=False)
-        self.set_font("Arial", size=12)
+        self.set_font("Arial", style='B', size=10)
+        self.cell(25, 5, "Volumes:", ln=False)
+        self.set_font("Arial", size=10)
 
-        # 🔹 **Ajuste responsivo na posição do volume**
-        self.cell(self.largura_mm * 0.3, 5, f"{volume_atual}/{total_volumes}", ln=True)
+        # 🔹 **Ajuste responsivo da posição do volume**
+        self.cell(self.largura_mm * 0.2, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
         # Notas Fiscais
-        self.set_font("Arial", size=8, style='B')
+        self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, nfs.strip())
+        self.multi_cell(largura_texto, 5, nfs.strip())
 
-        # Observações
-        self.set_font("Arial", size=8, style='B')
+        # Observação
+        self.set_font("Arial", style='B', size=8)
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, obs.strip())
+        self.multi_cell(largura_texto, 5, obs.strip())
 
 @app.route("/")
 def home():
@@ -80,15 +85,23 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
+        # Criando buffer de memória
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, dest='S')
+
+        # Salvar o PDF corretamente no buffer
+        pdf_output.write(pdf.output(dest='S').encode('latin1'))
         pdf_output.seek(0)
 
-        # ✅ **Garantindo que o PDF não esteja vazio**
+        # 🚨 Verificação extra para evitar arquivos vazios
         if pdf_output.getbuffer().nbytes == 0:
             return jsonify({"erro": "Erro ao gerar PDF: Arquivo vazio"}), 500
 
-        return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
+        return send_file(
+            pdf_output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="etiqueta.pdf"
+        )
 
     except ValueError as ve:
         return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
