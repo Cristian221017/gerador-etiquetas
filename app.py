@@ -51,7 +51,7 @@ class EtiquetaPDF(FPDF):
 
         # **Observação** (✅ Agora corrigido e alinhado corretamente)
         self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Observação:", ln=True)  # 🔥 Mantendo alinhado corretamente como os outros títulos
+        self.cell(0, 5, "Observação:", ln=True) # Mantendo alinhado corretamente como os outros títulos
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto, 5, obs.strip())
 
