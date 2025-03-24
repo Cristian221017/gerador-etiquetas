@@ -11,43 +11,40 @@ class EtiquetaPDF(FPDF):
         super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
         self.largura_mm = largura_mm
         self.altura_mm = altura_mm
+
+    def header(self):
+        pass
+
+    def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_margins(5, 5, 5)
         self.set_auto_page_break(auto=False, margin=5)
 
-    def header(self):
-        pass  # Removendo cabeçalho para evitar sobreposição
-
-    def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        margem = 5  # Margem interna
-        linha_atual = self.h - 40  # Definir posição inicial do texto
-
-        # Títulos e textos alinhados
-        self.set_font("Arial", style='B', size=8)
+        self.set_font("Arial", size=8, style='B')
         self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
         self.cell(0, 5, remetente.strip(), ln=True)
 
-        self.set_font("Arial", style='B', size=8)
+        self.set_font("Arial", size=8, style='B')
         self.cell(20, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
         self.cell(0, 5, destinatario.strip(), ln=True)
 
-        self.set_font("Arial", style='B', size=10)
+        self.set_font("Arial", size=10, style='B')
         self.cell(15, 5, "CTE:", ln=False)
         self.set_font("Arial", size=10)
-        self.cell(50, 5, cte.strip(), ln=False)
+        self.cell(self.largura_mm / 2 - 25, 5, cte.strip(), ln=False)
 
-        self.set_font("Arial", style='B', size=10)
+        self.set_font("Arial", size=10, style='B')
         self.cell(20, 5, "Volumes:", ln=False)
         self.set_font("Arial", size=10)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
-        self.set_font("Arial", style='B', size=8)
+        self.set_font("Arial", size=8, style='B')
         self.cell(0, 5, "Notas Fiscais:", ln=True)
         self.set_font("Arial", size=8)
         self.multi_cell(0, 5, nfs.strip())
 
-        self.set_font("Arial", style='B', size=8)
+        self.set_font("Arial", size=8, style='B')
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=8)
         self.multi_cell(0, 5, obs.strip())
@@ -82,7 +79,7 @@ def gerar_etiqueta():
         pdf.output(pdf_output, dest='S')
         pdf_output.seek(0)
 
-        return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
+        return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiquetas.pdf")
 
     except ValueError as ve:
         return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
