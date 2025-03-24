@@ -20,34 +20,32 @@ class EtiquetaPDF(FPDF):
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         self.set_xy(5, 5)
         self.set_font("Arial", style='B', size=8)
-
         largura_texto = self.largura_mm - 10
-        espaco = 1  # 🔹 Ajuste fino para reduzir espaçamento após ":"
+        espaco = 1  # Reduzindo o espaçamento após os dois pontos
 
         # Remetente
         self.cell(25, 5, "Remetente:", ln=False)
-        self.set_x(self.get_x() + espaco)  # 🔹 Ajuste fino
+        self.set_x(self.get_x() + espaco)
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto - 25, 5, remetente.strip())
 
         # Destinatário
         self.set_font("Arial", style='B', size=8)
         self.cell(25, 5, "Destinatário:", ln=False)
-        self.set_x(self.get_x() + espaco)  # 🔹 Ajuste fino
+        self.set_x(self.get_x() + espaco)
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto - 25, 5, destinatario.strip())
 
-        # CTE e Volume (agora com formato correto)
+        # CTE e Volume
         self.set_font("Arial", style='B', size=10)
         self.cell(15, 5, "CTE:", ln=False)
-        self.set_x(self.get_x() + espaco)  # 🔹 Ajuste fino
+        self.set_x(self.get_x() + espaco)
         self.set_font("Arial", size=10)
         self.cell(50, 5, cte.strip(), ln=False)
 
-        # 🔹 Posicionando corretamente a informação "Volumes: 1/10"
         self.set_font("Arial", style='B', size=10)
         self.cell(20, 5, "Volumes:", ln=False)
-        self.set_x(self.get_x() + espaco)  # 🔹 Ajuste fino
+        self.set_x(self.get_x() + espaco)
         self.set_font("Arial", size=10)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
@@ -92,9 +90,9 @@ def gerar_etiqueta():
         # Criando buffer de memória
         pdf_output = io.BytesIO()
 
-        # Salvar o PDF corretamente no buffer
-        pdf_output.write(pdf.output(dest='S').encode('latin1'))
-        pdf_output.seek(0)
+        # Salvar corretamente no buffer (modo binário)
+        pdf_output.write(pdf.output(dest='S').encode('latin1'))  
+        pdf_output.seek(0)  # Garante que o buffer seja lido do início
 
         # 🚨 Verificação extra para evitar arquivos vazios
         if pdf_output.getbuffer().nbytes == 0:
