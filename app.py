@@ -17,7 +17,7 @@ class EtiquetaPDF(FPDF):
     def header(self):
         pass  # Removendo cabeçalho para evitar sobreposição
 
-    def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
+    def add_etiqueta(self, origem, destino, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
         largura_texto = self.largura_mm - 10  # Largura útil da etiqueta
 
         def adicionar_campo(titulo, conteudo):
@@ -27,11 +27,25 @@ class EtiquetaPDF(FPDF):
             self.multi_cell(largura_texto - 30, 5, conteudo.strip(), align='L')
             self.ln(1)  # Pequeno espaçamento entre os campos
 
-        # Adicionando os campos à etiqueta
+        # Adicionando ORIGEM e DESTINO (sem título, apenas os valores)
+        self.set_font("Arial", size=12, style='B')
+        self.cell(0, 8, f"{origem} x {destino}", ln=True, align='C')
+        self.ln(3)
+
+        # Adicionando os campos padrão
         adicionar_campo("Remetente", remetente)
         adicionar_campo("Destinatário", destinatario)
-        adicionar_campo("CTE", cte)
-        adicionar_campo("Volumes", f"{volume_atual}/{total_volumes}")
+
+        # CTE e Volumes dentro de uma caixa preta com texto branco
+        self.set_fill_color(0, 0, 0)  # Define a cor de fundo como preta
+        self.set_text_color(255, 255, 255)  # Define o texto como branco
+        self.set_font("Arial", style='B', size=10)
+        self.cell(self.largura_mm / 2 - 5, 7, f"CTE: {cte}", ln=False, align='C', fill=True)
+        self.cell(self.largura_mm / 2 - 5, 7, f"Volumes: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
+        self.set_text_color(0, 0, 0)  # Retorna o texto para preto
+        self.ln(3)
+
+        # Notas Fiscais e Observação
         adicionar_campo("Notas Fiscais", nfs)
         adicionar_campo("Observação", obs)
 
@@ -46,6 +60,8 @@ def gerar_etiqueta():
 
     try:
         data = request.get_json()
+        origem = data.get("origem", "Origem Padrão")
+        destino = data.get("destino", "Destino Padrão")
         remetente = data.get("remetente", "Remetente Padrão")
         destinatario = data.get("destinatario", "Destinatário Padrão")
         cte = data.get("cte", "000000")
@@ -59,11 +75,11 @@ def gerar_etiqueta():
 
         for volume in range(1, total_volumes + 1):
             pdf.add_page()
-            pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
+            pdf.add_etiqueta(origem, destino, remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
         # Criando buffer de memória para armazenar o PDF
         pdf_output = io.BytesIO()
-        pdf_output.write(pdf.output(dest='S'))  # ⚠️ Removida a conversão para 'latin1'
+        pdf_output.write(pdf.output(dest='S'))
         pdf_output.seek(0)
 
         # 🚨 Verificação extra para evitar arquivos vazios
