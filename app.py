@@ -80,9 +80,12 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
+        # Criar um buffer de memória para o PDF
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output, dest='S')
-        pdf_output.seek(0)
+        
+        # Escrever o PDF corretamente no buffer
+        pdf.output(pdf_output, dest='F')  # 'F' garante que o arquivo é fechado corretamente
+        pdf_output.seek(0)  # Move para o início para garantir que o conteúdo seja lido corretamente
 
         return send_file(pdf_output, mimetype="application/pdf", as_attachment=True, download_name="etiqueta.pdf")
 
