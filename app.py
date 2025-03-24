@@ -18,20 +18,19 @@ class EtiquetaPDF(FPDF):
         pass  # Removendo cabeçalho para evitar sobreposição
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        self.set_xy(5, 5)
-        largura_texto = self.largura_mm - 10  # Mantendo a largura ajustada para evitar corte
+        largura_texto = self.largura_mm - 10  # Mantendo a largura ajustada
 
         # **Remetente**
         self.set_font("Arial", style='B', size=8)
-        self.cell(20, 5, "Remetente:", ln=False)
+        self.cell(25, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=8)
-        self.cell(0, 5, remetente.strip(), ln=True)
+        self.multi_cell(largura_texto - 25, 5, remetente.strip())
 
         # **Destinatário**
         self.set_font("Arial", style='B', size=8)
-        self.cell(20, 5, "Destinatário:", ln=False)
+        self.cell(25, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=8)
-        self.cell(0, 5, destinatario.strip(), ln=True)
+        self.multi_cell(largura_texto - 25, 5, destinatario.strip())
 
         # **CTE e Volumes**
         self.set_font("Arial", style='B', size=10)
@@ -40,7 +39,7 @@ class EtiquetaPDF(FPDF):
         self.cell(50, 5, cte.strip(), ln=False)
 
         self.set_font("Arial", style='B', size=10)
-        self.cell(20, 5, "Volumes:", ln=False)
+        self.cell(25, 5, "Volumes:", ln=False)
         self.set_font("Arial", size=10)
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
@@ -50,11 +49,11 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto, 5, nfs.strip())
 
-        # **Observação**
+        # **Observação** ✅ **Agora corrigido para estar alinhado corretamente**
         self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Observação:", ln=True)
+        self.cell(25, 5, "Observação:", ln=False)  # 🔥 Alinhado igual aos outros títulos
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, obs.strip())
+        self.multi_cell(largura_texto - 25, 5, obs.strip())
 
 @app.route("/")
 def home():
@@ -82,9 +81,9 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        # Criando buffer de memória (CORREÇÃO)
+        # Criando buffer de memória (CORREÇÃO FINAL)
         pdf_output = io.BytesIO()
-        pdf_output.write(pdf.output(dest='S'))  # 🔥 Removido `.encode('latin1')`
+        pdf_output.write(pdf.output(dest='S'))  # 🔥 Corrigido para evitar erro de encoding
         pdf_output.seek(0)
 
         # 🚨 Verificação extra para evitar arquivos vazios
