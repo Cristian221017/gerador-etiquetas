@@ -11,54 +11,53 @@ class EtiquetaPDF(FPDF):
         super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
         self.largura_mm = largura_mm
         self.altura_mm = altura_mm
-        self.set_margins(2, 2, 2)  # Margens reduzidas para otimização
+        self.set_margins(2, 2, 2)  # Bordas reduzidas para 2px
         self.set_auto_page_break(auto=False, margin=2)
 
     def header(self):
-        pass  # Removendo cabeçalho
+        pass  # Remove o cabeçalho padrão
 
-    def add_etiqueta(self, origem_destino, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        largura_texto = self.largura_mm - 4  # Ajuste para alinhar os textos corretamente
+    def add_etiqueta(self, origem, destino, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
+        largura_texto = self.largura_mm - 10  # Espaço disponível
 
-        # Origem x Destino no topo
-        self.set_font("Arial", style='B', size=9)
-        self.cell(0, 6, origem_destino, ln=True, align='C')
+        # 📌 Origem e Destino (Centralizados)
+        self.set_xy(2, 2)
+        self.set_font("Arial", style='B', size=10)
+        self.cell(0, 5, f"{origem} x {destino}", ln=True, align='C')
 
-        # CTE e Volume dentro de uma caixa preta com letras brancas
-        self.set_fill_color(0, 0, 0)  # Cor preta
-        self.set_text_color(255, 255, 255)  # Texto branco
-        self.set_font("Arial", style='B', size=9)
+        # 📌 Caixa preta com CTE e Volume
+        self.set_fill_color(0, 0, 0)
+        self.set_text_color(255, 255, 255)
+        self.set_font("Arial", style='B', size=10)
+        self.cell(self.largura_mm / 2, 7, f"CTE: {cte}", ln=False, align='C', fill=True)
+        self.cell(self.largura_mm / 2, 7, f"Volumes: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
 
-        self.cell(largura_texto / 2, 6, f"CTE: {cte}", border=1, fill=True, ln=False)
-        self.cell(largura_texto / 2, 6, f"Volumes: {volume_atual}/{total_volumes}", border=1, fill=True, ln=True)
-
-        # Restaurando cor preta do texto para as informações abaixo
+        # 📌 Resetando cor do texto
         self.set_text_color(0, 0, 0)
-        self.set_font("Arial", size=7)
 
-        # Remetente
+        # 📌 Remetente
         self.set_font("Arial", style='B', size=7)
-        self.cell(20, 5, "Remetente:", ln=False)
+        self.cell(20, 4, "Remetente:", ln=False)
         self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto - 20, 5, remetente.strip())
+        self.multi_cell(largura_texto - 20, 4, remetente.strip())
 
-        # Destinatário
+        # 📌 Destinatário
         self.set_font("Arial", style='B', size=7)
-        self.cell(20, 5, "Destinatário:", ln=False)
+        self.cell(20, 4, "Destinatário:", ln=False)
         self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto - 20, 5, destinatario.strip())
+        self.multi_cell(largura_texto - 20, 4, destinatario.strip())
 
-        # Notas Fiscais
+        # 📌 Notas Fiscais
         self.set_font("Arial", style='B', size=7)
-        self.cell(0, 5, "Notas Fiscais:", ln=True)
+        self.cell(20, 4, "Notas Fiscais:", ln=False)
         self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto, 5, nfs.strip())
+        self.multi_cell(largura_texto - 20, 4, nfs.strip())
 
-        # Observação corrigida para se alinhar corretamente
+        # 📌 Observação (Corrigida para posição correta)
         self.set_font("Arial", style='B', size=7)
-        self.cell(0, 5, "Observação:", ln=True)
+        self.cell(20, 4, "Observação:", ln=False)
         self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto, 5, obs.strip())
+        self.multi_cell(largura_texto - 20, 4, obs.strip())
 
 @app.route("/")
 def home():
@@ -71,7 +70,8 @@ def gerar_etiqueta():
 
     try:
         data = request.get_json()
-        origem_destino = data.get("origem_destino", "Origem x Destino")
+        origem = data.get("origem", "Origem Padrão")
+        destino = data.get("destino", "Destino Padrão")
         remetente = data.get("remetente", "Remetente Padrão")
         destinatario = data.get("destinatario", "Destinatário Padrão")
         cte = data.get("cte", "000000")
@@ -85,11 +85,10 @@ def gerar_etiqueta():
 
         for volume in range(1, total_volumes + 1):
             pdf.add_page()
-            pdf.add_etiqueta(origem_destino, remetente, destinatario, cte, nfs, obs, volume, total_volumes)
+            pdf.add_etiqueta(origem, destino, remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        # Criando buffer de memória
         pdf_output = io.BytesIO()
-        pdf.output(pdf_output)
+        pdf_output.write(pdf.output(dest='S').encode('latin1'))  # Convertendo para binário corretamente
         pdf_output.seek(0)
 
         return send_file(
