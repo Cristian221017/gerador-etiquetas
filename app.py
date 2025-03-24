@@ -5,8 +5,10 @@ from flask_caching import Cache
 
 app = Flask(__name__)
 
-# Configuração do cache (Cache Simples)
-cache = Cache(app, config={'CACHE_TYPE': 'simple', 'CACHE_DEFAULT_TIMEOUT': 300})  # Cache de 5 minutos
+# Configuração do cache (corrigido)
+app.config['CACHE_TYPE'] = 'simple'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 300
+cache = Cache(app)
 
 class EtiquetaPDF(FPDF):
     def __init__(self, largura_cm, altura_cm):
@@ -27,7 +29,7 @@ class EtiquetaPDF(FPDF):
 
         largura_texto = self.largura_mm - 4
 
-        # Origem e Destino
+        # Origem e Destino no topo
         self.cell(0, 6, origem_destino, align="C", ln=True)
 
         # Caixa preta para CTE e Volumes
@@ -36,7 +38,7 @@ class EtiquetaPDF(FPDF):
         self.cell(largura_texto / 2, 6, f"CTE: {cte.strip()}", align="C", fill=True)
         self.cell(largura_texto / 2, 6, f"Volumes: {volume_atual}/{total_volumes}", align="C", fill=True, ln=True)
 
-        # Resetando cor do texto para normal
+        # Resetando cor do texto
         self.set_text_color(0, 0, 0)
 
         # Remetente
@@ -57,14 +59,14 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", size=7)
         self.multi_cell(largura_texto, 5, nfs.strip())
 
-        # Observação (corrigida para alinhar corretamente)
+        # Observação (corrigida)
         self.set_font("Arial", style='B', size=7)
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=7)
         self.multi_cell(largura_texto, 5, obs.strip())
 
 @app.route("/")
-@cache.cached(timeout=300)  # Cache de 5 minutos para evitar recarregamento desnecessário
+@cache.cached(timeout=300)
 def home():
     return render_template("index.html")
 
