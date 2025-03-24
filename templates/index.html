@@ -30,6 +30,18 @@
             <label for="cte" class="form-label">CTE:</label>
             <input type="text" class="form-control" id="cte" required>
         </div>
+        <div class="mb-3">
+            <label for="nfs" class="form-label">Notas Fiscais:</label>
+            <textarea class="form-control" id="nfs" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="obs" class="form-label">Observação:</label>
+            <textarea class="form-control" id="obs"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="total_volumes" class="form-label">Total de Volumes:</label>
+            <input type="number" class="form-control" id="total_volumes" value="1" required min="1">
+        </div>
         <button type="button" class="btn btn-primary" id="gerarEtiquetaBtn">Gerar Etiqueta</button>
     </form>
 
@@ -40,7 +52,10 @@
                 destino: document.getElementById("destino").value,
                 remetente: document.getElementById("remetente").value,
                 destinatario: document.getElementById("destinatario").value,
-                cte: document.getElementById("cte").value
+                cte: document.getElementById("cte").value,
+                nfs: document.getElementById("nfs").value,
+                obs: document.getElementById("obs").value,
+                total_volumes: parseInt(document.getElementById("total_volumes").value)
             };
 
             fetch("/gerar_etiqueta", {
@@ -53,8 +68,10 @@
                 let url = window.URL.createObjectURL(blob);
                 let a = document.createElement("a");
                 a.href = url;
-                a.download = "etiqueta.pdf";
+                a.download = "etiquetas.pdf";
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
             });
         });
     </script>

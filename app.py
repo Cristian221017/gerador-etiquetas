@@ -11,53 +11,43 @@ class EtiquetaPDF(FPDF):
         super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
         self.largura_mm = largura_mm
         self.altura_mm = altura_mm
-        self.set_margins(2, 2, 2)  # Bordas reduzidas para 2px
+        self.set_margins(5, 2, 5)  # Reduzindo a margem superior para 2px
         self.set_auto_page_break(auto=False, margin=2)
 
     def header(self):
-        pass  # Remove o cabeçalho padrão
+        pass  # Removendo cabeçalho para evitar sobreposição
 
     def add_etiqueta(self, origem, destino, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        largura_texto = self.largura_mm - 10  # Espaço disponível
+        largura_texto = self.largura_mm - 10  # Largura útil da etiqueta
 
-        # 📌 Origem e Destino (Centralizados)
-        self.set_xy(2, 2)
-        self.set_font("Arial", style='B', size=10)
-        self.cell(0, 5, f"{origem} x {destino}", ln=True, align='C')
+        def adicionar_campo(titulo, conteudo):
+            self.set_font("Arial", style='B', size=7)
+            self.cell(25, 4, f"{titulo}:", ln=False)
+            self.set_font("Arial", size=7)
+            self.multi_cell(largura_texto - 25, 4, conteudo.strip(), align='L')
+            self.ln(1)  # Pequeno espaçamento entre os campos
 
-        # 📌 Caixa preta com CTE e Volume
-        self.set_fill_color(0, 0, 0)
-        self.set_text_color(255, 255, 255)
-        self.set_font("Arial", style='B', size=10)
-        self.cell(self.largura_mm / 2, 7, f"CTE: {cte}", ln=False, align='C', fill=True)
-        self.cell(self.largura_mm / 2, 7, f"Volumes: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
+        # ORIGEM x DESTINO no topo, mantendo 12px
+        self.set_font("Arial", size=12, style='B')
+        self.cell(0, 7, f"{origem} x {destino}", ln=True, align='C')
+        self.ln(2)
 
-        # 📌 Resetando cor do texto
-        self.set_text_color(0, 0, 0)
+        # Adicionando os campos padrão (Reduzido para 7px)
+        adicionar_campo("Remetente", remetente)
+        adicionar_campo("Destinatário", destinatario)
 
-        # 📌 Remetente
-        self.set_font("Arial", style='B', size=7)
-        self.cell(20, 4, "Remetente:", ln=False)
-        self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto - 20, 4, remetente.strip())
+        # CTE e Volumes dentro de uma caixa preta com texto branco
+        self.set_fill_color(0, 0, 0)  # Define a cor de fundo como preta
+        self.set_text_color(255, 255, 255)  # Define o texto como branco
+        self.set_font("Arial", style='B', size=9)
+        self.cell(self.largura_mm / 2 - 5, 6, f"CTE: {cte}", ln=False, align='C', fill=True)
+        self.cell(self.largura_mm / 2 - 5, 6, f"Volumes: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
+        self.set_text_color(0, 0, 0)  # Retorna o texto para preto
+        self.ln(2)
 
-        # 📌 Destinatário
-        self.set_font("Arial", style='B', size=7)
-        self.cell(20, 4, "Destinatário:", ln=False)
-        self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto - 20, 4, destinatario.strip())
-
-        # 📌 Notas Fiscais
-        self.set_font("Arial", style='B', size=7)
-        self.cell(20, 4, "Notas Fiscais:", ln=False)
-        self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto - 20, 4, nfs.strip())
-
-        # 📌 Observação (Corrigida para posição correta)
-        self.set_font("Arial", style='B', size=7)
-        self.cell(20, 4, "Observação:", ln=False)
-        self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto - 20, 4, obs.strip())
+        # Notas Fiscais e Observação
+        adicionar_campo("Notas Fiscais", nfs)
+        adicionar_campo("Observação", obs)
 
 @app.route("/")
 def home():
@@ -87,9 +77,14 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(origem, destino, remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
+        # Criando buffer de memória para armazenar o PDF
         pdf_output = io.BytesIO()
-        pdf_output.write(pdf.output(dest='S').encode('latin1'))  # Convertendo para binário corretamente
+        pdf_output.write(pdf.output(dest='S'))
         pdf_output.seek(0)
+
+        # 🚨 Verificação extra para evitar arquivos vazios
+        if pdf_output.getbuffer().nbytes == 0:
+            return jsonify({"erro": "Erro ao gerar PDF: Arquivo vazio"}), 500
 
         return send_file(
             pdf_output,
@@ -98,6 +93,8 @@ def gerar_etiqueta():
             download_name="etiqueta.pdf"
         )
 
+    except ValueError as ve:
+        return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
     except Exception as e:
         return jsonify({"erro": f"Erro interno do servidor: {str(e)}"}), 500
 
