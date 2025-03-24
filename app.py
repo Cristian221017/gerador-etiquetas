@@ -50,11 +50,11 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto, 5, nfs.strip())
 
-        # **Observação (Corrigido para Alinhamento Perfeito)**
+        # **Observação**
         self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Observação:", ln=True)  # 🔥 Agora idêntico aos outros títulos!
+        self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, obs.strip())  # 🔥 Mantém alinhamento correto
+        self.multi_cell(largura_texto, 5, obs.strip())
 
 @app.route("/")
 def home():
@@ -82,10 +82,9 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        # Criando buffer de memória
+        # Criando buffer de memória (CORREÇÃO)
         pdf_output = io.BytesIO()
-        pdf_bytes = pdf.output(dest='S').encode('latin1')  # 🔥 CORRIGIDO para evitar erro de encoding
-        pdf_output.write(pdf_bytes)
+        pdf_output.write(pdf.output(dest='S'))  # 🔥 Removido `.encode('latin1')`
         pdf_output.seek(0)
 
         # 🚨 Verificação extra para evitar arquivos vazios
