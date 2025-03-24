@@ -1,14 +1,8 @@
 from flask import Flask, request, send_file, jsonify, render_template
 from fpdf import FPDF
 import io
-from flask_caching import Cache
 
 app = Flask(__name__)
-
-# Configuração do cache (corrigido)
-app.config['CACHE_TYPE'] = 'simple'
-app.config['CACHE_DEFAULT_TIMEOUT'] = 300
-cache = Cache(app)
 
 class EtiquetaPDF(FPDF):
     def __init__(self, largura_cm, altura_cm):
@@ -17,41 +11,42 @@ class EtiquetaPDF(FPDF):
         super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
         self.largura_mm = largura_mm
         self.altura_mm = altura_mm
-        self.set_margins(2, 2, 2)
+        self.set_margins(2, 2, 2)  # Margens reduzidas para otimização
         self.set_auto_page_break(auto=False, margin=2)
 
     def header(self):
-        pass  # Removendo cabeçalho para evitar sobreposição
+        pass  # Removendo cabeçalho
 
     def add_etiqueta(self, origem_destino, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        self.set_xy(2, 2)
+        largura_texto = self.largura_mm - 4  # Ajuste para alinhar os textos corretamente
+
+        # Origem x Destino no topo
+        self.set_font("Arial", style='B', size=9)
+        self.cell(0, 6, origem_destino, ln=True, align='C')
+
+        # CTE e Volume dentro de uma caixa preta com letras brancas
+        self.set_fill_color(0, 0, 0)  # Cor preta
+        self.set_text_color(255, 255, 255)  # Texto branco
         self.set_font("Arial", style='B', size=9)
 
-        largura_texto = self.largura_mm - 4
+        self.cell(largura_texto / 2, 6, f"CTE: {cte}", border=1, fill=True, ln=False)
+        self.cell(largura_texto / 2, 6, f"Volumes: {volume_atual}/{total_volumes}", border=1, fill=True, ln=True)
 
-        # Origem e Destino no topo
-        self.cell(0, 6, origem_destino, align="C", ln=True)
-
-        # Caixa preta para CTE e Volumes
-        self.set_fill_color(0, 0, 0)
-        self.set_text_color(255, 255, 255)
-        self.cell(largura_texto / 2, 6, f"CTE: {cte.strip()}", align="C", fill=True)
-        self.cell(largura_texto / 2, 6, f"Volumes: {volume_atual}/{total_volumes}", align="C", fill=True, ln=True)
-
-        # Resetando cor do texto
+        # Restaurando cor preta do texto para as informações abaixo
         self.set_text_color(0, 0, 0)
+        self.set_font("Arial", size=7)
 
         # Remetente
         self.set_font("Arial", style='B', size=7)
-        self.cell(15, 5, "Remetente:", ln=False)
+        self.cell(20, 5, "Remetente:", ln=False)
         self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto - 15, 5, remetente.strip())
+        self.multi_cell(largura_texto - 20, 5, remetente.strip())
 
         # Destinatário
         self.set_font("Arial", style='B', size=7)
-        self.cell(15, 5, "Destinatário:", ln=False)
+        self.cell(20, 5, "Destinatário:", ln=False)
         self.set_font("Arial", size=7)
-        self.multi_cell(largura_texto - 15, 5, destinatario.strip())
+        self.multi_cell(largura_texto - 20, 5, destinatario.strip())
 
         # Notas Fiscais
         self.set_font("Arial", style='B', size=7)
@@ -59,14 +54,13 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", size=7)
         self.multi_cell(largura_texto, 5, nfs.strip())
 
-        # Observação (corrigida)
+        # Observação corrigida para se alinhar corretamente
         self.set_font("Arial", style='B', size=7)
         self.cell(0, 5, "Observação:", ln=True)
         self.set_font("Arial", size=7)
         self.multi_cell(largura_texto, 5, obs.strip())
 
 @app.route("/")
-@cache.cached(timeout=300)
 def home():
     return render_template("index.html")
 
