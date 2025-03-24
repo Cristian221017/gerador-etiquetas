@@ -22,32 +22,34 @@ class EtiquetaPDF(FPDF):
         self.set_font("Arial", style='B', size=8)
 
         largura_texto = self.largura_mm - 10
+        espaco = 1  # 🔹 Ajuste fino para reduzir espaçamento após ":"
 
         # Remetente
         self.cell(25, 5, "Remetente:", ln=False)
+        self.set_x(self.get_x() + espaco)  # 🔹 Ajuste fino
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto - 25, 5, remetente.strip())
 
         # Destinatário
         self.set_font("Arial", style='B', size=8)
         self.cell(25, 5, "Destinatário:", ln=False)
+        self.set_x(self.get_x() + espaco)  # 🔹 Ajuste fino
         self.set_font("Arial", size=8)
         self.multi_cell(largura_texto - 25, 5, destinatario.strip())
 
-        # CTE e Volume
+        # CTE e Volume (agora com formato correto)
         self.set_font("Arial", style='B', size=10)
         self.cell(15, 5, "CTE:", ln=False)
+        self.set_x(self.get_x() + espaco)  # 🔹 Ajuste fino
         self.set_font("Arial", size=10)
         self.cell(50, 5, cte.strip(), ln=False)
 
+        # 🔹 Posicionando corretamente a informação "Volumes: 1/10"
         self.set_font("Arial", style='B', size=10)
-        self.cell(25, 5, "Volumes:", ln=False)
+        self.cell(20, 5, "Volumes:", ln=False)
+        self.set_x(self.get_x() + espaco)  # 🔹 Ajuste fino
         self.set_font("Arial", size=10)
-
-        # 🔹 **Ajuste da posição do volume no meio da etiqueta**
-        pos_x = self.largura_mm * 0.5 - 10  # Centralizando
-        self.set_x(pos_x)
-        self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True, align="C")
+        self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
         # Notas Fiscais
         self.set_font("Arial", style='B', size=8)
