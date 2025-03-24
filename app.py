@@ -18,19 +18,20 @@ class EtiquetaPDF(FPDF):
         pass  # Removendo cabeçalho para evitar sobreposição
 
     def add_etiqueta(self, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
-        largura_texto = self.largura_mm - 10  # Ajustando para evitar que o texto saia da etiqueta
+        largura_texto = self.largura_mm - 10  # Ajustando para evitar estouro de texto
+
+        def adicionar_texto(titulo, conteudo, negrito=True):
+            """ Função para adicionar títulos e conteúdos formatados corretamente """
+            self.set_font("Arial", style='B' if negrito else '', size=8)
+            self.cell(25, 5, f"{titulo} ", ln=False)  # 🔥 Mantém alinhamento
+            self.set_font("Arial", size=8)
+            self.multi_cell(0, 5, conteudo.strip())  # 🔥 Mantém alinhamento correto
 
         # **Remetente**
-        self.set_font("Arial", style='B', size=8)
-        self.cell(25, 5, "Remetente:", ln=False)
-        self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, remetente.strip())  # 🔥 Agora mantém alinhamento
+        adicionar_texto("Remetente:", remetente)
 
         # **Destinatário**
-        self.set_font("Arial", style='B', size=8)
-        self.cell(25, 5, "Destinatário:", ln=False)
-        self.set_font("Arial", size=8)
-        self.multi_cell(0, 5, destinatario.strip())
+        adicionar_texto("Destinatário:", destinatario)
 
         # **CTE e Volumes na mesma linha**
         self.set_font("Arial", style='B', size=10)
@@ -44,16 +45,10 @@ class EtiquetaPDF(FPDF):
         self.cell(0, 5, f"{volume_atual}/{total_volumes}", ln=True)
 
         # **Notas Fiscais**
-        self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Notas Fiscais:", ln=True)  # 🔥 Mantém alinhamento correto
-        self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, nfs.strip())
+        adicionar_texto("Notas Fiscais:", nfs)
 
         # **Observação** (🔥 AGORA 100% CORRIGIDO 🔥)
-        self.set_font("Arial", style='B', size=8)
-        self.cell(0, 5, "Observação:", ln=True)  # ✅ Mantém alinhado corretamente
-        self.set_font("Arial", size=8)
-        self.multi_cell(largura_texto, 5, obs.strip())  # 🔥 Agora fica abaixo, nunca deslocado para a direita
+        adicionar_texto("Observação:", obs)
 
 @app.route("/")
 def home():
@@ -75,7 +70,14 @@ def gerar_etiqueta():
         largura_cm = float(data.get("largura", 10))
         altura_cm = float(data.get("altura", 5))
 
+        # 🔥 Se a largura for muito pequena, reduzimos a fonte para evitar erro de espaço
+        if largura_cm < 8:
+            font_size = 6  # Reduzindo fonte para espaços pequenos
+        else:
+            font_size = 8  # Fonte normal
+
         pdf = EtiquetaPDF(largura_cm, altura_cm)
+        pdf.set_font("Arial", size=font_size)  # Aplicando fonte corrigida
 
         for volume in range(1, total_volumes + 1):
             pdf.add_page()
