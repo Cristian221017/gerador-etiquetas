@@ -42,14 +42,6 @@
             <label for="total_volumes" class="form-label">Total de Volumes:</label>
             <input type="number" class="form-control" id="total_volumes" value="1" required min="1">
         </div>
-        <div class="mb-3">
-            <label for="largura" class="form-label">Largura (cm):</label>
-            <input type="number" class="form-control" id="largura" value="10" required min="5">
-        </div>
-        <div class="mb-3">
-            <label for="altura" class="form-label">Altura (cm):</label>
-            <input type="number" class="form-control" id="altura" value="5" required min="3">
-        </div>
         <button type="button" class="btn btn-primary" id="gerarEtiquetaBtn">Gerar Etiqueta</button>
     </form>
 
@@ -63,9 +55,7 @@
                 cte: document.getElementById("cte").value,
                 nfs: document.getElementById("nfs").value,
                 obs: document.getElementById("obs").value,
-                total_volumes: parseInt(document.getElementById("total_volumes").value),
-                largura: parseFloat(document.getElementById("largura").value),
-                altura: parseFloat(document.getElementById("altura").value)
+                total_volumes: parseInt(document.getElementById("total_volumes").value)
             };
 
             fetch("/gerar_etiqueta", {
@@ -82,8 +72,7 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-            })
-            .catch(error => alert("Erro ao gerar etiqueta: " + error.message));
+            });
         });
     </script>
 </body>

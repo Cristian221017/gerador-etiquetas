@@ -11,8 +11,8 @@ class EtiquetaPDF(FPDF):
         super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
         self.largura_mm = largura_mm
         self.altura_mm = altura_mm
-        self.set_margins(5, 5, 5)
-        self.set_auto_page_break(auto=False, margin=5)
+        self.set_margins(5, 2, 5)  # Reduzindo a margem superior para 2px
+        self.set_auto_page_break(auto=False, margin=2)
 
     def header(self):
         pass  # Removendo cabeçalho para evitar sobreposição
@@ -21,29 +21,29 @@ class EtiquetaPDF(FPDF):
         largura_texto = self.largura_mm - 10  # Largura útil da etiqueta
 
         def adicionar_campo(titulo, conteudo):
-            self.set_font("Arial", style='B', size=9)
-            self.cell(30, 5, f"{titulo}:", ln=False)
-            self.set_font("Arial", size=9)
-            self.multi_cell(largura_texto - 30, 5, conteudo.strip(), align='L')
+            self.set_font("Arial", style='B', size=7)
+            self.cell(25, 4, f"{titulo}:", ln=False)
+            self.set_font("Arial", size=7)
+            self.multi_cell(largura_texto - 25, 4, conteudo.strip(), align='L')
             self.ln(1)  # Pequeno espaçamento entre os campos
 
-        # Adicionando ORIGEM e DESTINO (sem título, apenas os valores)
+        # ORIGEM x DESTINO no topo, mantendo 12px
         self.set_font("Arial", size=12, style='B')
-        self.cell(0, 8, f"{origem} x {destino}", ln=True, align='C')
-        self.ln(3)
+        self.cell(0, 7, f"{origem} x {destino}", ln=True, align='C')
+        self.ln(2)
 
-        # Adicionando os campos padrão
+        # Adicionando os campos padrão (Reduzido para 7px)
         adicionar_campo("Remetente", remetente)
         adicionar_campo("Destinatário", destinatario)
 
         # CTE e Volumes dentro de uma caixa preta com texto branco
         self.set_fill_color(0, 0, 0)  # Define a cor de fundo como preta
         self.set_text_color(255, 255, 255)  # Define o texto como branco
-        self.set_font("Arial", style='B', size=10)
-        self.cell(self.largura_mm / 2 - 5, 7, f"CTE: {cte}", ln=False, align='C', fill=True)
-        self.cell(self.largura_mm / 2 - 5, 7, f"Volumes: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
+        self.set_font("Arial", style='B', size=9)
+        self.cell(self.largura_mm / 2 - 5, 6, f"CTE: {cte}", ln=False, align='C', fill=True)
+        self.cell(self.largura_mm / 2 - 5, 6, f"Volumes: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
         self.set_text_color(0, 0, 0)  # Retorna o texto para preto
-        self.ln(3)
+        self.ln(2)
 
         # Notas Fiscais e Observação
         adicionar_campo("Notas Fiscais", nfs)
