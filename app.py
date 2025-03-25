@@ -11,7 +11,7 @@ class EtiquetaPDF(FPDF):
         super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
         self.largura_mm = largura_mm
         self.altura_mm = altura_mm
-        self.set_margins(5, 2, 5)  # Margens superiores reduzidas para 2px
+        self.set_margins(5, 2, 5)  # Margem superior ajustada para 2 px
         self.set_auto_page_break(auto=False, margin=2)
 
     def header(self):
@@ -21,36 +21,37 @@ class EtiquetaPDF(FPDF):
         largura_texto = self.largura_mm - 10  # Largura útil da etiqueta
 
         def adicionar_campo(titulo, conteudo):
-            self.set_font("Arial", style='B', size=7)  # Reduzindo fonte para 7px
-            self.cell(20, 4, f"{titulo}:", ln=False)  # Reduzindo espaçamento após ":"
+            self.set_font("Arial", style='B', size=7)  # Diminuindo fontes para 7 px
+            self.cell(25, 4, f"{titulo}:", ln=False)
             self.set_font("Arial", size=7)
-            self.multi_cell(largura_texto - 20, 4, conteudo.strip(), align='L')
+            self.cell(1)  # Ajusta o espaçamento após os dois pontos para 1 px
+            self.multi_cell(largura_texto - 25, 4, conteudo.strip().upper(), align='L')
             self.ln(1)  # Pequeno espaçamento entre os campos
 
-        # ORIGEM x DESTINO no topo, com fundo preto e texto branco
-        self.set_fill_color(0, 0, 0)
-        self.set_text_color(255, 255, 255)
-        self.set_font("Arial", style='B', size=12)
+        # ORIGEM x DESTINO (Caixa preta, fonte branca)
+        self.set_fill_color(0, 0, 0)  # Fundo preto
+        self.set_text_color(255, 255, 255)  # Texto branco
+        self.set_font("Arial", size=12, style='B')  # Fonte 12 px
         self.cell(0, 7, f"{origem.upper()} x {destino.upper()}", ln=True, align='C', fill=True)
-        self.set_text_color(0, 0, 0)  # Retornando texto para preto
+        self.set_text_color(0, 0, 0)  # Retorna o texto para preto
         self.ln(2)
 
         # Adicionando os campos padrão
-        adicionar_campo("Remetente", remetente.upper())
-        adicionar_campo("Destinatário", destinatario.upper())
+        adicionar_campo("Remetente", remetente)
+        adicionar_campo("Destinatário", destinatario)
 
         # CTE e Volumes dentro de uma caixa preta com texto branco
-        self.set_fill_color(0, 0, 0)
-        self.set_text_color(255, 255, 255)
-        self.set_font("Arial", style='B', size=12)
-        self.cell(self.largura_mm / 2 - 5, 6, f"CTE: {cte.upper()}", ln=False, align='C', fill=True)
-        self.cell(self.largura_mm / 2 - 5, 6, f"VOLUMES: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
+        self.set_fill_color(0, 0, 0)  # Fundo preto
+        self.set_text_color(255, 255, 255)  # Texto branco
+        self.set_font("Arial", style='B', size=12)  # Fonte 12 px
+        self.cell(self.largura_mm / 2 - 5, 6, f"CTE: {cte}", ln=False, align='C', fill=True)
+        self.cell(self.largura_mm / 2 - 5, 6, f"Volumes: {volume_atual}/{total_volumes}", ln=True, align='C', fill=True)
         self.set_text_color(0, 0, 0)  # Retorna o texto para preto
         self.ln(2)
 
         # Notas Fiscais e Observação
-        adicionar_campo("Notas Fiscais", nfs.upper())
-        adicionar_campo("Observação", obs.upper())
+        adicionar_campo("Notas Fiscais", nfs)
+        adicionar_campo("Observação", obs)
 
 @app.route("/")
 def home():
