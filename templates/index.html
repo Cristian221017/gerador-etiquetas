@@ -12,35 +12,31 @@
     <form id="etiquetaForm">
         <div class="mb-3">
             <label for="origem" class="form-label">Origem:</label>
-            <input type="text" class="form-control text-uppercase" id="origem" required>
+            <input type="text" class="form-control" id="origem" required>
         </div>
         <div class="mb-3">
             <label for="destino" class="form-label">Destino:</label>
-            <input type="text" class="form-control text-uppercase" id="destino" required>
+            <input type="text" class="form-control" id="destino" required>
         </div>
         <div class="mb-3">
             <label for="remetente" class="form-label">Remetente:</label>
-            <input type="text" class="form-control text-uppercase" id="remetente" required>
+            <input type="text" class="form-control" id="remetente" required>
         </div>
         <div class="mb-3">
             <label for="destinatario" class="form-label">Destinatário:</label>
-            <input type="text" class="form-control text-uppercase" id="destinatario" required>
+            <input type="text" class="form-control" id="destinatario" required>
         </div>
         <div class="mb-3">
             <label for="cte" class="form-label">CTE:</label>
-            <input type="text" class="form-control text-uppercase" id="cte" required>
+            <input type="text" class="form-control" id="cte" required>
         </div>
         <div class="mb-3">
             <label for="nfs" class="form-label">Notas Fiscais:</label>
-            <textarea class="form-control text-uppercase" id="nfs" required></textarea>
+            <textarea class="form-control" id="nfs" required></textarea>
         </div>
         <div class="mb-3">
             <label for="obs" class="form-label">Observação:</label>
-            <textarea class="form-control text-uppercase" id="obs"></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="total_volumes" class="form-label">Total de Volumes:</label>
-            <input type="number" class="form-control" id="total_volumes" value="1" required min="1">
+            <textarea class="form-control" id="obs"></textarea>
         </div>
         <button type="button" class="btn btn-primary" id="gerarEtiquetaBtn">Gerar Etiqueta</button>
     </form>
@@ -54,33 +50,15 @@
                 destinatario: document.getElementById("destinatario").value.toUpperCase(),
                 cte: document.getElementById("cte").value.toUpperCase(),
                 nfs: document.getElementById("nfs").value.toUpperCase(),
-                obs: document.getElementById("obs").value.toUpperCase(),
-                total_volumes: parseInt(document.getElementById("total_volumes").value) || 1
+                obs: document.getElementById("obs").value.toUpperCase()
             };
 
             fetch("/gerar_etiqueta", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Erro ao gerar PDF");
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                let url = window.URL.createObjectURL(blob);
-                let a = document.createElement("a");
-                a.href = url;
-                a.download = "etiqueta.pdf";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            })
-            .catch(error => alert("Erro ao gerar etiqueta: " + error.message));
+            });
         });
     </script>
-
 </body>
 </html>
