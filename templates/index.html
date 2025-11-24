@@ -18,7 +18,7 @@
               Gerador de Etiquetas de Carga
             </h1>
             <p class="text-xs text-slate-300">
-              Preencha os dados e gere o PDF com as etiquetas.
+              Preencha os dados ou importe o XML para gerar o PDF com as etiquetas.
             </p>
           </div>
           <div class="text-right">
@@ -29,6 +29,29 @@
 
         <main class="px-6 py-5">
           <form id="etiqueta-form" class="space-y-4">
+            <!-- Bloco: Importar XML -->
+            <div class="border rounded-lg p-3 bg-slate-50 space-y-2">
+              <p class="text-xs font-semibold text-slate-700">
+                Preencher automaticamente pelos XMLs (CT-e / NF-e)
+              </p>
+              <input
+                type="file"
+                id="xml-file"
+                accept=".xml"
+                class="w-full text-xs text-slate-600"
+              />
+              <div class="flex items-center gap-3">
+                <button
+                  type="button"
+                  id="btn-preencher-xml"
+                  class="px-3 py-1.5 rounded-md text-[11px] font-medium bg-slate-800 text-white hover:bg-slate-700 transition"
+                >
+                  Ler XML e preencher dados
+                </button>
+                <p id="status-xml" class="text-[11px] text-slate-500"></p>
+              </div>
+            </div>
+
             <!-- Linha: Origem / Destino -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -85,7 +108,7 @@
               </div>
             </div>
 
-            <!-- Linha: CTE / Total de Volumes -->
+            <!-- Linha: CTE / Total de Volumes / Tamanho etiqueta -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label class="block text-xs font-medium text-slate-700 mb-1"
@@ -201,6 +224,73 @@
       const form = document.getElementById("etiqueta-form");
       const statusEl = document.getElementById("status");
 
+      const xmlInput = document.getElementById("xml-file");
+      const xmlBtn = document.getElementById("btn-preencher-xml");
+      const statusXml = document.getElementById("status-xml");
+
+      // Ler XML e preencher campos
+      if (xmlBtn) {
+        xmlBtn.addEventListener("click", async () => {
+          if (!xmlInput.files || xmlInput.files.length === 0) {
+            statusXml.textContent = "Selecione um arquivo XML primeiro.";
+            statusXml.classList.remove("text-green-600");
+            statusXml.classList.add("text-red-500");
+            return;
+          }
+
+          const file = xmlInput.files[0];
+          const formData = new FormData();
+          formData.append("xml_file", file);
+
+          statusXml.textContent = "Lendo XML...";
+          statusXml.classList.remove("text-red-500", "text-green-600");
+
+          try {
+            const resp = await fetch("/parse_xml", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+              statusXml.textContent = data?.erro || "Falha ao interpretar XML.";
+              statusXml.classList.add("text-red-500");
+              return;
+            }
+
+            // Preenche os campos do formulário com o retorno
+            const setVal = (name, value) => {
+              const el = document.querySelector(`[name="${name}"]`);
+              if (el && value !== undefined && value !== null && value !== "") {
+                el.value = value;
+              }
+            };
+
+            setVal("origem", data.origem);
+            setVal("destino", data.destino);
+            setVal("remetente", data.remetente);
+            setVal("destinatario", data.destinatario);
+            setVal("cte", data.cte);
+            setVal("nfs", data.nfs);
+            setVal("obs", data.obs);
+            setVal("total_volumes", data.total_volumes);
+            setVal("largura", data.largura);
+            setVal("altura", data.altura);
+
+            statusXml.textContent =
+              "XML interpretado com sucesso. Dados preenchidos!";
+            statusXml.classList.remove("text-red-500");
+            statusXml.classList.add("text-green-600");
+          } catch (e) {
+            console.error(e);
+            statusXml.textContent = "Erro inesperado ao interpretar XML.";
+            statusXml.classList.remove("text-green-600");
+            statusXml.classList.add("text-red-500");
+          }
+        });
+      }
+
+      // Envio normal do formulário para gerar o PDF
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         statusEl.textContent = "Gerando PDF, aguarde...";
