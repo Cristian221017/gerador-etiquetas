@@ -9,6 +9,7 @@ app = Flask(__name__)
 # PDF "RESPONSIVO" POR TAMANHO
 # -----------------------------
 
+
 class EtiquetaPDF(FPDF):
     """
     Classe de geração de etiqueta com layout 'responsivo' em relação ao tamanho da etiqueta.
@@ -18,10 +19,11 @@ class EtiquetaPDF(FPDF):
       - nível de detalhes exibidos
     de acordo com largura/altura informados em cm.
     """
+
     def __init__(self, largura_cm, altura_cm):
         largura_mm = largura_cm * 10
         altura_mm = altura_cm * 10
-        super().__init__(orientation='P', unit='mm', format=(largura_mm, altura_mm))
+        super().__init__(orientation="P", unit="mm", format=(largura_mm, altura_mm))
         self.largura_mm = largura_mm
         self.altura_mm = altura_mm
 
@@ -50,29 +52,35 @@ class EtiquetaPDF(FPDF):
 
         # Etiqueta muito pequena (ex: menor que ~80 x 40 = 3200 mm²)
         if area < 3200:
-            estilos.update({
-                "fonte_topo": 10,
-                "fonte_campos": 7,
-                "fonte_obs": 6,
-                "altura_linha": 4,
-                "mostrar_obs": False,   # esconder observação se ficar apertado
-            })
+            estilos.update(
+                {
+                    "fonte_topo": 10,
+                    "fonte_campos": 7,
+                    "fonte_obs": 6,
+                    "altura_linha": 4,
+                    "mostrar_obs": False,  # esconder observação se ficar apertado
+                }
+            )
         # Etiqueta pequena/média
         elif area < 6000:
-            estilos.update({
-                "fonte_topo": 11,
-                "fonte_campos": 8,
-                "fonte_obs": 7,
-                "altura_linha": 4.5,
-            })
+            estilos.update(
+                {
+                    "fonte_topo": 11,
+                    "fonte_campos": 8,
+                    "fonte_obs": 7,
+                    "altura_linha": 4.5,
+                }
+            )
         # Etiquetas grandes: pode “aparecer” mais
         elif area > 9000:
-            estilos.update({
-                "fonte_topo": 14,
-                "fonte_campos": 11,
-                "fonte_obs": 9,
-                "altura_linha": 5.5,
-            })
+            estilos.update(
+                {
+                    "fonte_topo": 14,
+                    "fonte_campos": 11,
+                    "fonte_obs": 9,
+                    "altura_linha": 5.5,
+                }
+            )
 
         return estilos
 
@@ -83,7 +91,18 @@ class EtiquetaPDF(FPDF):
         # Mantém começo e final, corta o meio
         return texto[: max_chars - 3] + "..."
 
-    def add_etiqueta(self, origem, destino, remetente, destinatario, cte, nfs, obs, volume_atual, total_volumes):
+    def add_etiqueta(
+        self,
+        origem,
+        destino,
+        remetente,
+        destinatario,
+        cte,
+        nfs,
+        obs,
+        volume_atual,
+        total_volumes,
+    ):
         largura_texto = self.largura_mm - 10  # largura útil da etiqueta
         alt_linha = self.estilos["altura_linha"]
 
@@ -99,27 +118,29 @@ class EtiquetaPDF(FPDF):
 
             fonte = fonte or self.estilos["fonte_campos"]
 
-            self.set_font("Arial", style='B', size=fonte)
+            self.set_font("Arial", style="B", size=fonte)
             # largura reservada para o título
             largura_titulo = 25
             self.cell(largura_titulo, alt_linha, f"{titulo}:", ln=False)
             self.cell(1)  # pequeno espaçamento
             # texto do conteúdo
-            self.set_font("Arial", style='', size=fonte)
-            self.multi_cell(largura_texto - largura_titulo, alt_linha, conteudo, align='L')
+            self.set_font("Arial", style="", size=fonte)
+            self.multi_cell(
+                largura_texto - largura_titulo, alt_linha, conteudo, align="L"
+            )
             self.ln(0.5)
 
         # -------- TOPO: ORIGEM x DESTINO --------
         self.set_fill_color(0, 0, 0)
         self.set_text_color(255, 255, 255)
-        self.set_font("Arial", style='B', size=self.estilos["fonte_topo"])
+        self.set_font("Arial", style="B", size=self.estilos["fonte_topo"])
 
         topo_texto = f"{(origem or '').upper()} x {(destino or '').upper()}"
         # Se a etiqueta for bem estreita, corta o texto de topo também
         if self.largura_mm < 60:
             topo_texto = self._truncar_se_necessario(topo_texto, 20)
 
-        self.cell(0, alt_linha + 2, topo_texto, ln=True, align='C', fill=True)
+        self.cell(0, alt_linha + 2, topo_texto, ln=True, align="C", fill=True)
         self.set_text_color(0, 0, 0)
         self.ln(2)
 
@@ -134,7 +155,7 @@ class EtiquetaPDF(FPDF):
         # -------- CTE e VOLUMES em destaque --------
         self.set_fill_color(0, 0, 0)
         self.set_text_color(255, 255, 255)
-        self.set_font("Arial", style='B', size=self.estilos["fonte_campos"] + 1)
+        self.set_font("Arial", style="B", size=self.estilos["fonte_campos"] + 1)
 
         largura_meio = self.largura_mm / 2 - 5
         cte_label = f"CTE: {(cte or '').upper()}"
@@ -145,29 +166,44 @@ class EtiquetaPDF(FPDF):
             cte_label = self._truncar_se_necessario(cte_label, 18)
             vol_label = self._truncar_se_necessario(vol_label, 16)
 
-        self.cell(largura_meio, alt_linha + 1, cte_label, ln=False, align='C', fill=True)
-        self.cell(largura_meio, alt_linha + 1, vol_label, ln=True, align='C', fill=True)
+        self.cell(
+            largura_meio, alt_linha + 1, cte_label, ln=False, align="C", fill=True
+        )
+        self.cell(
+            largura_meio, alt_linha + 1, vol_label, ln=True, align="C", fill=True
+        )
         self.set_text_color(0, 0, 0)
         self.ln(2)
 
         # -------- NOTAS FISCAIS --------
         if self.estilos["mostrar_nfs"] and nfs:
-            adicionar_campo("Notas Fiscais", nfs, max_chars=120 if not area_pequena else 60)
+            adicionar_campo(
+                "Notas Fiscais",
+                nfs,
+                max_chars=120 if not area_pequena else 60,
+            )
 
         # -------- OBSERVAÇÃO (OPCIONAL) --------
         if self.estilos["mostrar_obs"] and obs:
-            adicionar_campo("Observação", obs, fonte=self.estilos["fonte_obs"], max_chars=160 if not area_pequena else 80)
+            adicionar_campo(
+                "Observação",
+                obs,
+                fonte=self.estilos["fonte_obs"],
+                max_chars=160 if not area_pequena else 80,
+            )
 
 
 # -----------------------------
 # PARSER DE XML (CT-e / NF-e)
 # -----------------------------
 
+
 def _strip_ns(tag: str) -> str:
     """Remove namespace de uma tag XML (ex: '{http://...}ide' -> 'ide')."""
-    if '}' in tag:
-        return tag.split('}', 1)[1]
+    if "}" in tag:
+        return tag.split("}", 1)[1]
     return tag
+
 
 def _find_first_by_tag(root, tag_names):
     """
@@ -183,6 +219,24 @@ def _find_first_by_tag(root, tag_names):
             return elem
     return None
 
+
+def numero_nf_da_chave(chave: str):
+    """
+    Extrai o número da NF (nNF) a partir da chave de NF-e (44 dígitos).
+    nNF ocupa as posições 26 a 34 (índices 25 a 34 em Python).
+    """
+    if not chave:
+        return None
+    apenas_digitos = "".join(filter(str.isdigit, chave))
+    if len(apenas_digitos) != 44:
+        return None
+    nNF = apenas_digitos[25:34]
+    try:
+        return str(int(nNF))  # remove zeros à esquerda
+    except ValueError:
+        return None
+
+
 def parse_xml_cte_nfe(xml_content: str):
     """
     Faz uma interpretação 'genérica' de XML de CT-e ou NF-e para extrair:
@@ -191,7 +245,7 @@ def parse_xml_cte_nfe(xml_content: str):
       - remetente (xNome)
       - destinatario (xNome)
       - cte (nCT ou chave)
-      - nfs (lista de chaves ou números de NF-e, concatenados)
+      - nfs (lista de números de NF ou chaves, concatenados)
       - obs (xObs, obsCont etc. se houver)
       - total_volumes (a partir de tpMed/qCarga quando tpMed = 'QTDE VOLUMES')
     """
@@ -234,7 +288,9 @@ def parse_xml_cte_nfe(xml_content: str):
         dest = _find_first_by_tag(infcte, ["dest"])
         if dest is not None:
             xNome_dest = _find_first_by_tag(dest, ["xNome"])
-            destinatario = (xNome_dest.text or "").strip() if xNome_dest is not None else ""
+            destinatario = (
+                (xNome_dest.text or "").strip() if xNome_dest is not None else ""
+            )
 
             ender_d = _find_first_by_tag(dest, ["enderDest", "enderReceb"])
             if ender_d is not None:
@@ -254,10 +310,25 @@ def parse_xml_cte_nfe(xml_content: str):
         # NF-es vinculadas (infDoc / infNFe / chave)
         infDoc = _find_first_by_tag(infcte, ["infDoc"])
         if infDoc is not None:
-            for child in infDoc.iter():
-                if _strip_ns(child.tag) in ("chave", "chNFe"):
-                    if child.text:
-                        nfs_list.append(child.text.strip())
+            for child in infDoc:
+                tag = _strip_ns(child.tag)
+
+                # NF-e
+                if tag == "infNFe":
+                    chave_el = _find_first_by_tag(child, ["chave", "chNFe"])
+                    if chave_el is not None and chave_el.text:
+                        chave = chave_el.text.strip()
+                        numero_nf = numero_nf_da_chave(chave)
+                        if numero_nf:
+                            nfs_list.append(numero_nf)
+                        else:
+                            nfs_list.append(chave)
+
+                # NF modelo 1/1A (papel)
+                if tag == "infNF":
+                    nDoc_el = _find_first_by_tag(child, ["nDoc"])
+                    if nDoc_el is not None and nDoc_el.text:
+                        nfs_list.append(nDoc_el.text.strip())
 
         # Observações (xObs, obsCont, obsFisco)
         compl = _find_first_by_tag(infcte, ["compl"])
@@ -295,12 +366,14 @@ def parse_xml_cte_nfe(xml_content: str):
                 except ValueError:
                     pass
 
-    # ------------- NF-e (se enviada isolada) -------------
+    # ------------- NF-e (se enviada isolada, sem CT-e) -------------
     if infnfe is not None and not remetente and not destinatario:
         emit = _find_first_by_tag(infnfe, ["emit"])
         if emit is not None:
             xNome_emit = _find_first_by_tag(emit, ["xNome"])
-            remetente = (xNome_emit.text or "").strip() if xNome_emit is not None else ""
+            remetente = (
+                (xNome_emit.text or "").strip() if xNome_emit is not None else ""
+            )
             ender_emit = _find_first_by_tag(emit, ["enderEmit"])
             if ender_emit is not None:
                 xMun = _find_first_by_tag(ender_emit, ["xMun"])
@@ -312,7 +385,9 @@ def parse_xml_cte_nfe(xml_content: str):
         dest_nfe = _find_first_by_tag(infnfe, ["dest"])
         if dest_nfe is not None:
             xNome_dest = _find_first_by_tag(dest_nfe, ["xNome"])
-            destinatario = (xNome_dest.text or "").strip() if xNome_dest is not None else ""
+            destinatario = (
+                (xNome_dest.text or "").strip() if xNome_dest is not None else ""
+            )
             ender_dest = _find_first_by_tag(dest_nfe, ["enderDest"])
             if ender_dest is not None:
                 xMun = _find_first_by_tag(ender_dest, ["xMun"])
@@ -321,17 +396,18 @@ def parse_xml_cte_nfe(xml_content: str):
                 uf = (UF.text or "").strip() if UF is not None else ""
                 destino = f"{cidade} - {uf}".strip(" -")
 
-        # Número da NF
+        # Número da NF (nNF) na própria NF-e
         ide_nf = _find_first_by_tag(infnfe, ["ide"])
         if ide_nf is not None:
             nNF = _find_first_by_tag(ide_nf, ["nNF"])
             if nNF is not None and nNF.text:
                 nfs_list.append(nNF.text.strip())
 
-        # Também dá pra procurar volumes em NF-e (qVol), se quiser evoluir depois
-
-    # Consolida NFs
-    nfs_str = ", ".join(dict.fromkeys(nfs_list)) if nfs_list else ""
+    # Consolida NFs (remove duplicadas mantendo ordem)
+    if nfs_list:
+        nfs_str = ", ".join(dict.fromkeys(nfs_list))
+    else:
+        nfs_str = ""
 
     # Monta payload padrão do sistema
     payload = {
@@ -353,6 +429,7 @@ def parse_xml_cte_nfe(xml_content: str):
 # -----------------------------
 # ROTAS FLASK
 # -----------------------------
+
 
 @app.route("/")
 def home():
@@ -420,7 +497,10 @@ def gerar_etiqueta():
         if total_volumes < 1:
             total_volumes = 1
         if largura_cm <= 0 or altura_cm <= 0:
-            return jsonify({"erro": "Largura e altura devem ser maiores que zero."}), 400
+            return (
+                jsonify({"erro": "Largura e altura devem ser maiores que zero."}),
+                400,
+            )
 
         pdf = EtiquetaPDF(largura_cm, altura_cm)
 
@@ -439,9 +519,9 @@ def gerar_etiqueta():
             )
 
         # Saída do PDF em bytes (tratamento robusto)
-        pdf_output_bytes = pdf.output(dest='S')
+        pdf_output_bytes = pdf.output(dest="S")
         if isinstance(pdf_output_bytes, str):
-            pdf_output_bytes = pdf_output_bytes.encode('latin-1')
+            pdf_output_bytes = pdf_output_bytes.encode("latin-1")
 
         if len(pdf_output_bytes) == 0:
             return jsonify({"erro": "Erro ao gerar PDF: arquivo vazio."}), 500
@@ -453,13 +533,12 @@ def gerar_etiqueta():
             pdf_output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="etiqueta.pdf"
+            download_name="etiqueta.pdf",
         )
 
     except ValueError as ve:
         return jsonify({"erro": f"Valor inválido: {str(ve)}"}), 400
     except Exception as e:
-        # Em produção, ideal seria logar o erro em vez de expor tudo
         return jsonify({"erro": f"Erro interno do servidor: {str(e)}"}), 500
 
 
