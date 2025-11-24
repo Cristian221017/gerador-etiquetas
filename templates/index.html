@@ -1,79 +1,260 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Etiquetas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container">
-    <h1 class="mt-5">Gerador de Etiquetas</h1>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gerador de Etiquetas - Rodoveiga</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Tailwind via CDN para visual mais moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-100 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-3xl mx-auto p-4">
+      <div
+        class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
+      >
+        <header class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+          <div>
+            <h1 class="text-lg font-semibold tracking-tight">
+              Gerador de Etiquetas de Carga
+            </h1>
+            <p class="text-xs text-slate-300">
+              Preencha os dados e gere o PDF com as etiquetas.
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-[10px] text-slate-400 uppercase">Powered by</p>
+            <p class="text-xs font-semibold tracking-wide">Rodoveiga Transportes</p>
+          </div>
+        </header>
 
-    <form id="etiquetaForm">
-        <div class="mb-3">
-            <label for="origem" class="form-label">Origem:</label>
-            <input type="text" class="form-control" id="origem" required>
-        </div>
-        <div class="mb-3">
-            <label for="destino" class="form-label">Destino:</label>
-            <input type="text" class="form-control" id="destino" required>
-        </div>
-        <div class="mb-3">
-            <label for="remetente" class="form-label">Remetente:</label>
-            <input type="text" class="form-control" id="remetente" required>
-        </div>
-        <div class="mb-3">
-            <label for="destinatario" class="form-label">Destinatário:</label>
-            <input type="text" class="form-control" id="destinatario" required>
-        </div>
-        <div class="mb-3">
-            <label for="cte" class="form-label">CTE:</label>
-            <input type="text" class="form-control" id="cte" required>
-        </div>
-        <div class="mb-3">
-            <label for="nfs" class="form-label">Notas Fiscais:</label>
-            <textarea class="form-control" id="nfs" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="obs" class="form-label">Observação:</label>
-            <textarea class="form-control" id="obs"></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="total_volumes" class="form-label">Total de Volumes:</label>
-            <input type="number" class="form-control" id="total_volumes" value="1" required min="1">
-        </div>
-        <button type="button" class="btn btn-primary" id="gerarEtiquetaBtn">Gerar Etiqueta</button>
-    </form>
+        <main class="px-6 py-5">
+          <form id="etiqueta-form" class="space-y-4">
+            <!-- Linha: Origem / Destino -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1"
+                  >Origem</label
+                >
+                <input
+                  type="text"
+                  name="origem"
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  placeholder="Ex: Bento Gonçalves - RS"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1"
+                  >Destino</label
+                >
+                <input
+                  type="text"
+                  name="destino"
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  placeholder="Ex: São Paulo - SP"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Linha: Remetente / Destinatário -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1"
+                  >Remetente</label
+                >
+                <input
+                  type="text"
+                  name="remetente"
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  placeholder="Nome / Razão social do remetente"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1"
+                  >Destinatário</label
+                >
+                <input
+                  type="text"
+                  name="destinatario"
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  placeholder="Nome / Razão social do destinatário"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Linha: CTE / Total de Volumes -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1"
+                  >CT-e</label
+                >
+                <input
+                  type="text"
+                  name="cte"
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  placeholder="Número do CT-e"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1"
+                  >Total de Volumes</label
+                >
+                <input
+                  type="number"
+                  name="total_volumes"
+                  min="1"
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  value="1"
+                  required
+                />
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1"
+                    >Largura (cm)</label
+                  >
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="largura"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                    value="10"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1"
+                    >Altura (cm)</label
+                  >
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="altura"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                    value="5"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Notas Fiscais -->
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1"
+                >Notas fiscais</label
+              >
+              <textarea
+                name="nfs"
+                rows="2"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                placeholder="Ex: NF 12345, NF 67890"
+              ></textarea>
+            </div>
+
+            <!-- Observação -->
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1"
+                >Observação</label
+              >
+              <textarea
+                name="obs"
+                rows="2"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                placeholder="Informações adicionais sobre a carga, cliente, rota etc."
+              ></textarea>
+            </div>
+
+            <!-- Status -->
+            <div id="status" class="text-xs text-slate-500 h-4"></div>
+
+            <!-- Botão -->
+            <div class="pt-2 flex justify-end gap-3">
+              <button
+                type="reset"
+                class="px-4 py-2 rounded-lg text-xs font-medium border border-slate-300 text-slate-600 hover:bg-slate-50 transition"
+              >
+                Limpar
+              </button>
+              <button
+                type="submit"
+                class="px-5 py-2 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition shadow-sm"
+              >
+                Gerar etiquetas em PDF
+              </button>
+            </div>
+          </form>
+        </main>
+
+        <footer class="px-6 py-3 border-t border-slate-200 bg-slate-50">
+          <p class="text-[11px] text-slate-500 text-right">
+            Sistema simples para geração de etiquetas | Uso interno
+          </p>
+        </footer>
+      </div>
+    </div>
 
     <script>
-        document.getElementById("gerarEtiquetaBtn").addEventListener("click", function() {
-            let data = {
-                origem: document.getElementById("origem").value.toUpperCase(),
-                destino: document.getElementById("destino").value.toUpperCase(),
-                remetente: document.getElementById("remetente").value.toUpperCase(),
-                destinatario: document.getElementById("destinatario").value.toUpperCase(),
-                cte: document.getElementById("cte").value.toUpperCase(),
-                nfs: document.getElementById("nfs").value.toUpperCase(),
-                obs: document.getElementById("obs").value.toUpperCase(),
-                total_volumes: parseInt(document.getElementById("total_volumes").value)
-            };
+      const form = document.getElementById("etiqueta-form");
+      const statusEl = document.getElementById("status");
 
-            fetch("/gerar_etiqueta", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.blob())
-            .then(blob => {
-                let url = window.URL.createObjectURL(blob);
-                let a = document.createElement("a");
-                a.href = url;
-                a.download = "etiquetas.pdf";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            });
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        statusEl.textContent = "Gerando PDF, aguarde...";
+
+        const formData = new FormData(form);
+        const payload = {};
+        formData.forEach((value, key) => {
+          payload[key] = value;
         });
+
+        // Conversões numéricas
+        payload.total_volumes = Number(payload.total_volumes) || 1;
+        payload.largura = Number(payload.largura) || 10;
+        payload.altura = Number(payload.altura) || 5;
+
+        try {
+          const response = await fetch("/gerar_etiqueta", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            statusEl.textContent =
+              errorData?.erro || "Erro ao gerar o PDF. Verifique os dados.";
+            statusEl.classList.remove("text-slate-500");
+            statusEl.classList.add("text-red-500");
+            return;
+          }
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "etiqueta.pdf";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+
+          statusEl.textContent = "PDF gerado com sucesso!";
+          statusEl.classList.remove("text-red-500");
+          statusEl.classList.add("text-green-600");
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent =
+            "Erro inesperado ao gerar o PDF. Tente novamente.";
+          statusEl.classList.remove("text-slate-500");
+          statusEl.classList.add("text-red-500");
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
