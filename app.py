@@ -82,11 +82,15 @@ def gerar_etiqueta():
             pdf.add_page()
             pdf.add_etiqueta(origem, destino, remetente, destinatario, cte, nfs, obs, volume, total_volumes)
 
-        pdf_output = io.BytesIO()
-        pdf_output.write(pdf.output(dest='S'))
+        # Gera saída do PDF e garante que esteja em bytes
+        pdf_output_bytes = pdf.output(dest='S')
+        if isinstance(pdf_output_bytes, str):
+            pdf_output_bytes = pdf_output_bytes.encode('latin-1')
+
+        pdf_output = io.BytesIO(pdf_output_bytes)
         pdf_output.seek(0)
 
-        if pdf_output.getbuffer().nbytes == 0:
+        if len(pdf_output_bytes) == 0:
             return jsonify({"erro": "Erro ao gerar PDF: Arquivo vazio"}), 500
 
         return send_file(
