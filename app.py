@@ -1,13 +1,18 @@
 from flask import Flask, request, send_file, jsonify, render_template
 from fpdf import FPDF
 import io
+import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
+
+# -----------------------------
+# PDF "RESPONSIVO" POR TAMANHO
+# -----------------------------
 
 class EtiquetaPDF(FPDF):
     """
     Classe de geração de etiqueta com layout 'responsivo' em relação ao tamanho da etiqueta.
-    A ideia é ajustar automaticamente:
+    Ajusta automaticamente:
       - tamanhos de fonte
       - espaçamentos
       - nível de detalhes exibidos
@@ -30,10 +35,6 @@ class EtiquetaPDF(FPDF):
     def _calcular_estilos_responsivos(self):
         """
         Define tamanhos de fonte e opções de compactação conforme o tamanho da etiqueta.
-        Regra simples, mas eficaz:
-          - Etiquetas muito pequenas: fontes menores, menos campos, observação mais compacta.
-          - Etiquetas médias: fontes padrão.
-          - Etiquetas grandes: fontes maiores e mais espaçamento.
         """
         area = self.largura_mm * self.altura_mm
 
@@ -158,9 +159,243 @@ class EtiquetaPDF(FPDF):
             adicionar_campo("Observação", obs, fonte=self.estilos["fonte_obs"], max_chars=160 if not area_pequena else 80)
 
 
+# -----------------------------
+# PARSER DE XML (CT-e / NF-e)
+# -----------------------------
+
+def _strip_ns(tag: str) -> str:
+    """Remove namespace de uma tag XML (ex: '{http://...}ide' -> 'ide')."""
+    if '}' in tag:
+        return tag.split('}', 1)[1]
+    return tag
+
+def _find_first_by_tag(root, tag_names):
+    """
+    Procura o primeiro elemento cujo nome (sem namespace) seja um dos informados em tag_names.
+    tag_names pode ser string ou lista.
+    """
+    if isinstance(tag_names, str):
+        tag_names = [tag_names]
+
+    wanted = set(tag_names)
+    for elem in root.iter():
+        if _strip_ns(elem.tag) in wanted:
+            return elem
+    return None
+
+def parse_xml_cte_nfe(xml_content: str):
+    """
+    Faz uma interpretação 'genérica' de XML de CT-e ou NF-e para extrair:
+      - origem (cidade/UF do remetente)
+      - destino (cidade/UF do destinatário)
+      - remetente (xNome)
+      - destinatario (xNome)
+      - cte (nCT ou chave)
+      - nfs (lista de chaves ou números de NF-e, concatenados)
+      - obs (xObs, obsCont etc. se houver)
+      - total_volumes (a partir de tpMed/qCarga quando tpMed = 'QTDE VOLUMES')
+    """
+    try:
+        root = ET.fromstring(xml_content)
+    except Exception as e:
+        raise ValueError(f"XML inválido: {e}")
+
+    # Alguns XMLs vêm como cteProc/nfeProc, então tentamos achar o "miolo"
+    # infCte ou infNFe se existirem
+    infcte = _find_first_by_tag(root, ["infCte", "InfCte"])
+    infnfe = _find_first_by_tag(root, ["infNFe", "InfNFe"])
+
+    origem = ""
+    destino = ""
+    remetente = ""
+    destinatario = ""
+    cte_numero = ""
+    nfs_list = []
+    obs = ""
+    total_volumes = None  # será preenchido se acharmos no XML
+
+    # ------------- CT-e -------------
+    if infcte is not None:
+        # REMETENTE
+        rem = _find_first_by_tag(infcte, ["rem"])
+        if rem is not None:
+            xNome_rem = _find_first_by_tag(rem, ["xNome"])
+            remetente = (xNome_rem.text or "").strip() if xNome_rem is not None else ""
+
+            ender = _find_first_by_tag(rem, ["enderReme", "enderRem", "enderEmit"])
+            if ender is not None:
+                xMun = _find_first_by_tag(ender, ["xMun"])
+                UF = _find_first_by_tag(ender, ["UF"])
+                cidade = (xMun.text or "").strip() if xMun is not None else ""
+                uf = (UF.text or "").strip() if UF is not None else ""
+                origem = f"{cidade} - {uf}".strip(" -")
+
+        # DESTINATÁRIO
+        dest = _find_first_by_tag(infcte, ["dest"])
+        if dest is not None:
+            xNome_dest = _find_first_by_tag(dest, ["xNome"])
+            destinatario = (xNome_dest.text or "").strip() if xNome_dest is not None else ""
+
+            ender_d = _find_first_by_tag(dest, ["enderDest", "enderReceb"])
+            if ender_d is not None:
+                xMun = _find_first_by_tag(ender_d, ["xMun"])
+                UF = _find_first_by_tag(ender_d, ["UF"])
+                cidade = (xMun.text or "").strip() if xMun is not None else ""
+                uf = (UF.text or "").strip() if UF is not None else ""
+                destino = f"{cidade} - {uf}".strip(" -")
+
+        # IDE (nCT, etc.)
+        ide = _find_first_by_tag(infcte, ["ide"])
+        if ide is not None:
+            nCT = _find_first_by_tag(ide, ["nCT"])
+            if nCT is not None and nCT.text:
+                cte_numero = nCT.text.strip()
+
+        # NF-es vinculadas (infDoc / infNFe / chave)
+        infDoc = _find_first_by_tag(infcte, ["infDoc"])
+        if infDoc is not None:
+            for child in infDoc.iter():
+                if _strip_ns(child.tag) in ("chave", "chNFe"):
+                    if child.text:
+                        nfs_list.append(child.text.strip())
+
+        # Observações (xObs, obsCont, obsFisco)
+        compl = _find_first_by_tag(infcte, ["compl"])
+        if compl is not None:
+            xObs = _find_first_by_tag(compl, ["xObs"])
+            if xObs is not None and xObs.text:
+                obs = xObs.text.strip()
+            else:
+                # tentar obsCont/obsFisco
+                txts = []
+                for elem in compl.iter():
+                    if _strip_ns(elem.tag) in ("obsCont", "obsFisco") and elem.text:
+                        txts.append(elem.text.strip())
+                if txts:
+                    obs = " | ".join(txts)
+
+        # QTDE VOLUMES a partir de tpMed/qCarga
+        # Estrutura típica:
+        # <infQ>
+        #   <tpMed>QTDE VOLUMES</tpMed>
+        #   <qCarga>126.0000</qCarga>
+        # </infQ>
+        for infQ in infcte.iter():
+            if _strip_ns(infQ.tag) not in ("infQ", "infCarga", "infQuant"):
+                continue
+            tpMed_el = _find_first_by_tag(infQ, ["tpMed"])
+            if tpMed_el is None or not tpMed_el.text:
+                continue
+            if tpMed_el.text.strip().upper() != "QTDE VOLUMES":
+                continue
+            qCarga_el = _find_first_by_tag(infQ, ["qCarga"])
+            if qCarga_el is not None and qCarga_el.text:
+                try:
+                    total_volumes = int(float(qCarga_el.text.strip()))
+                except ValueError:
+                    pass
+
+    # ------------- NF-e (se enviada isolada) -------------
+    if infnfe is not None and not remetente and not destinatario:
+        emit = _find_first_by_tag(infnfe, ["emit"])
+        if emit is not None:
+            xNome_emit = _find_first_by_tag(emit, ["xNome"])
+            remetente = (xNome_emit.text or "").strip() if xNome_emit is not None else ""
+            ender_emit = _find_first_by_tag(emit, ["enderEmit"])
+            if ender_emit is not None:
+                xMun = _find_first_by_tag(ender_emit, ["xMun"])
+                UF = _find_first_by_tag(ender_emit, ["UF"])
+                cidade = (xMun.text or "").strip() if xMun is not None else ""
+                uf = (UF.text or "").strip() if UF is not None else ""
+                origem = f"{cidade} - {uf}".strip(" -")
+
+        dest_nfe = _find_first_by_tag(infnfe, ["dest"])
+        if dest_nfe is not None:
+            xNome_dest = _find_first_by_tag(dest_nfe, ["xNome"])
+            destinatario = (xNome_dest.text or "").strip() if xNome_dest is not None else ""
+            ender_dest = _find_first_by_tag(dest_nfe, ["enderDest"])
+            if ender_dest is not None:
+                xMun = _find_first_by_tag(ender_dest, ["xMun"])
+                UF = _find_first_by_tag(ender_dest, ["UF"])
+                cidade = (xMun.text or "").strip() if xMun is not None else ""
+                uf = (UF.text or "").strip() if UF is not None else ""
+                destino = f"{cidade} - {uf}".strip(" -")
+
+        # Número da NF
+        ide_nf = _find_first_by_tag(infnfe, ["ide"])
+        if ide_nf is not None:
+            nNF = _find_first_by_tag(ide_nf, ["nNF"])
+            if nNF is not None and nNF.text:
+                nfs_list.append(nNF.text.strip())
+
+        # Também dá pra procurar volumes em NF-e (qVol), se quiser evoluir depois
+
+    # Consolida NFs
+    nfs_str = ", ".join(dict.fromkeys(nfs_list)) if nfs_list else ""
+
+    # Monta payload padrão do sistema
+    payload = {
+        "origem": origem or "",
+        "destino": destino or "",
+        "remetente": remetente or "",
+        "destinatario": destinatario or "",
+        "cte": cte_numero or "",
+        "nfs": nfs_str or "",
+        "obs": obs or "",
+    }
+
+    if total_volumes is not None and total_volumes > 0:
+        payload["total_volumes"] = total_volumes
+
+    return payload
+
+
+# -----------------------------
+# ROTAS FLASK
+# -----------------------------
+
 @app.route("/")
 def home():
     return render_template("index.html")
+
+
+@app.route("/parse_xml", methods=["POST"])
+def parse_xml_route():
+    """
+    Endpoint para interpretar XML de CT-e ou NF-e.
+    Aceita:
+      - multipart/form-data com arquivo (campo 'xml_file')
+      - application/json com campo 'xml'
+    Retorna JSON com campos já no padrão do formulário de etiqueta.
+    """
+    xml_content = None
+
+    # Upload via arquivo
+    if "xml_file" in request.files:
+        file = request.files["xml_file"]
+        if not file.filename:
+            return jsonify({"erro": "Nenhum arquivo selecionado."}), 400
+        xml_content = file.read().decode("utf-8", errors="ignore")
+
+    # Via JSON (xml como string)
+    if xml_content is None and request.is_json:
+        data = request.get_json(silent=True) or {}
+        xml_content = data.get("xml")
+
+    if not xml_content:
+        return jsonify({"erro": "Nenhum conteúdo XML recebido."}), 400
+
+    try:
+        parsed = parse_xml_cte_nfe(xml_content)
+        # Defaults se não vierem do XML
+        parsed.setdefault("total_volumes", 1)
+        parsed.setdefault("largura", 10)
+        parsed.setdefault("altura", 5)
+        return jsonify(parsed)
+    except ValueError as ve:
+        return jsonify({"erro": str(ve)}), 400
+    except Exception as e:
+        return jsonify({"erro": f"Falha ao interpretar XML: {e}"}), 500
 
 
 @app.route("/gerar_etiqueta", methods=["POST"])
