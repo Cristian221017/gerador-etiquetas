@@ -247,7 +247,7 @@ def parse_xml_cte_nfe(xml_content: str):
       - cte (nCT ou chave)
       - nfs (lista de números de NF ou chaves, concatenados)
       - obs (xObs, obsCont etc. se houver)
-      - total_volumes (a partir de tpMed/qCarga quando tpMed = 'QTDE VOLUMES')
+      - total_volumes (CT-e: tpMed/qCarga; NF-e: qVol)
     """
     try:
         root = ET.fromstring(xml_content)
@@ -395,6 +395,20 @@ def parse_xml_cte_nfe(xml_content: str):
                 cidade = (xMun.text or "").strip() if xMun is not None else ""
                 uf = (UF.text or "").strip() if UF is not None else ""
                 destino = f"{cidade} - {uf}".strip(" -")
+
+        # VOLUMES na NF-e: transp/vol/qVol
+        if total_volumes is None:
+            transp = _find_first_by_tag(infnfe, ["transp"])
+            if transp is not None:
+                for vol in transp.iter():
+                    if _strip_ns(vol.tag) == "vol":
+                        qVol_el = _find_first_by_tag(vol, ["qVol"])
+                        if qVol_el is not None and qVol_el.text:
+                            try:
+                                total_volumes = int(float(qVol_el.text.strip()))
+                            except ValueError:
+                                pass
+                            break  # pega só o primeiro vol
 
         # Número da NF (nNF) na própria NF-e
         ide_nf = _find_first_by_tag(infnfe, ["ide"])
